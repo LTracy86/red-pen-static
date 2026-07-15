@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Red Pen (static) - demo</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; max-width: 680px; margin: 3rem auto; padding: 0 1rem; color: #222; }
+    h1 { color: #d32f2f; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    button.demo { padding: .4rem .8rem; }
+  </style>
+</head>
+<body>
+  <h1>Red Pen (static) - demo</h1>
+  <p>This page loads <code>red-pen.js</code> with no server. Look for the red button
+  bottom-right. Add a note, pin one to an element, reload - it persists (localStorage).</p>
+  <div class="box"><h2 id="feature">A feature block</h2><p>Pin a note to this heading or paragraph.</p></div>
+  <div class="box"><h2>Another section</h2><button class="demo" id="demo-btn">A button</button></div>
+  <p>Open "All notes" in the panel to see the cross-page board, export, and import.</p>
+
+  <script src="../red-pen.js"></script>
+</body>
+</html>
