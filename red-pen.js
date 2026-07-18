@@ -405,7 +405,7 @@
   function enterEdit(n) {
     editingId = n.id;
     document.getElementById('rp-body').value = n.body || '';
-    document.getElementById('rp-type').value = TYPES[n.type] ? n.type : 'note';
+    setSelVal(document.getElementById('rp-type'), TYPES[n.type] ? n.type : 'note');
     setSelVal(document.getElementById('rp-prio'), n.priority);
     pendingAnchor = (n.anchor && n.anchor.sel) ? n.anchor : null;
     var pb = document.getElementById('rp-pin');
