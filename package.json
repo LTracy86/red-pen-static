@@ -1,6 +1,6 @@
 {
   "name": "red-pen-static",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Red Pen (client-only): a dev review-notes overlay for any website. Drop in one script; notes persist to localStorage. No server, no build, no deps.",
   "main": "red-pen.js",
   "files": [
