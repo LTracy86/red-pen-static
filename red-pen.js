@@ -239,7 +239,7 @@
         '</div>' +
       '</div>' +
       '<div class="rp-alltabs">' +
-        '<button class="rp-alltab active" data-f="open">Open</button>' +
+        '<button class="rp-alltab rp-active" data-f="open">Open</button>' +
         '<button class="rp-alltab" data-f="progress">In Progress</button>' +
         '<button class="rp-alltab" data-f="resolved">Resolved</button>' +
         '<button class="rp-alltab" data-f="all">All</button></div>' +

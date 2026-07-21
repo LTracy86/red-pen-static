@@ -50,6 +50,13 @@ Open `example/index.html` in a browser (or serve the folder) and use the red but
 
 ## Status
 
+v0.0.11 - theme-proofing: the widget now holds its look on sites whose CSS
+restyles bare elements (`button`, `p`, `a`, focus rings) with `!important`.
+Every widget style is asserted at full strength, an armor layer pins the
+typography properties components inherit, the generic state classes (`open`,
+`on`, `active`, `set`, `resolved`, `progress`) are namespaced to `rp-*`, and
+the Settings / Hub form controls moved from inline styles to armored classes.
+
 v0.0.1 - floating button + panel, typed notes (note / idea / problem / question)
 + priority, per-page list, resolve / reopen / delete, click-to-pin with numbered
 markers + Locate, dark mode, resizable panel, a cross-page All-notes board, and
