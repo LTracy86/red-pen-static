@@ -167,11 +167,11 @@
   document.head.appendChild(style);
 
   // ---- elements ----
-  var fab = el('button', { id: 'rp-fab', title: 'Red Pen', html: '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px;display:block"><path fill="currentColor" fill-rule="evenodd" d="M12 2l6.5 6.5-4.6 11.8a2 2 0 0 1-3.8 0L5.5 8.5 12 2zM13.7 11.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 1 1 3.4 0zM11.3 4.6h1.4v5h-1.4zM11.6 12.9h.8v6.7h-.8zM7.51 10.08 9.87 16.14 10.38 15.94 8.02 9.88zM16.49 10.08 14.13 16.14 13.62 15.94 15.98 9.88z"/></svg><span id="rp-badge" style="display:none">0</span>' });
+  var fab = el('button', { id: 'rp-fab', title: 'Red Pen', html: '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px;display:block"><path fill="currentColor" fill-rule="evenodd" d="M12 2l6.5 6.5-4.6 11.8a2 2 0 0 1-3.8 0L5.5 8.5 12 2zM13.7 11.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 1 1 3.4 0zM11.3 4.6h1.4v5h-1.4zM11.6 12.9h.8v6.7h-.8z"/></svg><span id="rp-badge" style="display:none">0</span>' });
   var panel = el('div', { id: 'rp-panel' });
   panel.innerHTML =
     '<div class="rp-resize" id="rp-resize" title="Drag to resize"></div>' +
-    '<div class="rp-head"><svg class="rp-nib" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 2l6.5 6.5-4.6 11.8a2 2 0 0 1-3.8 0L5.5 8.5 12 2zM13.7 11.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 1 1 3.4 0zM11.3 4.6h1.4v5h-1.4zM11.6 12.9h.8v6.7h-.8zM7.51 10.08 9.87 16.14 10.38 15.94 8.02 9.88zM16.49 10.08 14.13 16.14 13.62 15.94 15.98 9.88z"/></svg>Red Pen' +
+    '<div class="rp-head"><svg class="rp-nib" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 2l6.5 6.5-4.6 11.8a2 2 0 0 1-3.8 0L5.5 8.5 12 2zM13.7 11.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 1 1 3.4 0zM11.3 4.6h1.4v5h-1.4zM11.6 12.9h.8v6.7h-.8z"/></svg>Red Pen' +
       '<button class="rp-repo" id="rp-repo" title="All notes across pages">All notes</button>' +
       '<button class="rp-theme" id="rp-theme" title="Toggle dark mode">&#9789;</button>' +
       '<button class="rp-close" title="Close">&times;</button></div>' +
