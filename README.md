@@ -50,6 +50,11 @@ Open `example/index.html` in a browser (or serve the folder) and use the red but
 
 ## Status
 
+v0.0.12 - theme-proofing round two: the whole stylesheet now lives one ID
+tier up (component rules scoped under the widget's mount-root IDs), so even
+attribute-qualified site rules like `button[type="submit"] { ... !important }`
+- which out-rank plain classes - cannot restyle the widget.
+
 v0.0.11 - theme-proofing: the widget now holds its look on sites whose CSS
 restyles bare elements (`button`, `p`, `a`, focus rings) with `!important`.
 Every widget style is asserted at full strength, an armor layer pins the
