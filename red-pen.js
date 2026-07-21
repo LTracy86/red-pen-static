@@ -198,23 +198,23 @@
         '<button id="rp-export" title="Download all notes as JSON">Export</button>' +
         '<button id="rp-import" title="Import notes from a JSON file">Import</button>' +
         '<button class="rp-x" id="rp-allclose" title="Close">&times;</button></div>' +
-      '<div id="rp-setbox" style="display:none;flex-direction:column;gap:.45rem;padding:.55rem .8rem;border-bottom:1px solid #eee">' +
-        '<div style="font-weight:600">Settings</div>' +
-        '<label style="font-size:12px;display:flex;flex-direction:column;gap:.2rem">Custom note types <span style="color:#888;font-weight:400">one per line: "Label" or "Label|#hexcolor"</span>' +
-          '<textarea id="rp-customtypes" rows="3" placeholder="Design nit|#9C27B0&#10;Content|#2E7D32" style="box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:ui-monospace,Menlo,Consolas,monospace;font-size:12px"></textarea></label>' +
-        '<label style="font-size:12px;display:flex;align-items:center;gap:.4rem"><input type="checkbox" id="rp-pincustom"> Custom pin colour <input type="color" id="rp-pincolor" value="' + RED + '"></label>' +
-        '<div><button id="rp-setsave" class="rp-save" style="background:' + RED + ';color:#fff;border:none;border-radius:14px;padding:.35rem .9rem;cursor:pointer">Save</button></div>' +
+      '<div id="rp-setbox" class="rp-box" style="display:none">' +
+        '<div class="rp-b">Settings</div>' +
+        '<label class="rp-lbl">Custom note types <span class="rp-help">one per line: "Label" or "Label|#hexcolor"</span>' +
+          '<textarea id="rp-customtypes" rows="3" placeholder="Design nit|#9C27B0&#10;Content|#2E7D32" class="rp-field rp-mono"></textarea></label>' +
+        '<label class="rp-lblrow"><input type="checkbox" id="rp-pincustom"> Custom pin colour <input type="color" id="rp-pincolor" value="' + RED + '"></label>' +
+        '<div><button id="rp-setsave" class="rp-save">Save</button></div>' +
       '</div>' +
-      '<div id="rp-hubbox" style="display:none;flex-direction:column;gap:.35rem;padding:.55rem .8rem;border-bottom:1px solid #eee">' +
-        '<div style="font-weight:600">Connect to Red Pen Hub</div>' +
-        '<div style="font-size:12px;color:#888">Push this site\'s notes to your local Hub so they show on the combined board. Copy the Hub URL + token from the Hub\'s "Connect a Site" panel.</div>' +
-        '<input type="text" id="rp-huburl" placeholder="Hub URL (e.g. http://localhost:3900)" style="box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:inherit">' +
-        '<input type="text" id="rp-hubtoken" placeholder="Connect token" style="box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:ui-monospace,Menlo,Consolas,monospace">' +
-        '<input type="text" id="rp-hubproject" placeholder="Project name (shown on the board)" style="box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:inherit">' +
-        '<div style="display:flex;gap:.5rem;align-items:center">' +
-          '<button id="rp-hubsave" class="rp-save" style="background:' + RED + ';color:#fff;border:none;border-radius:14px;padding:.35rem .9rem;cursor:pointer">Save &amp; Sync</button>' +
-          '<button id="rp-hubsync" style="background:none;border:1px solid #d4d7da;border-radius:14px;padding:.35rem .8rem;cursor:pointer;color:#444">Sync now</button>' +
-          '<span id="rp-hubstatus" style="font-size:12px;color:#888"></span>' +
+      '<div id="rp-hubbox" class="rp-box" style="display:none">' +
+        '<div class="rp-b">Connect to Red Pen Hub</div>' +
+        '<div class="rp-help">Push this site\'s notes to your local Hub so they show on the combined board. Copy the Hub URL + token from the Hub\'s "Connect a Site" panel.</div>' +
+        '<input type="text" id="rp-huburl" placeholder="Hub URL (e.g. http://localhost:3900)" class="rp-field">' +
+        '<input type="text" id="rp-hubtoken" placeholder="Connect token" class="rp-field rp-mono">' +
+        '<input type="text" id="rp-hubproject" placeholder="Project name (shown on the board)" class="rp-field">' +
+        '<div class="rp-hubrow">' +
+          '<button id="rp-hubsave" class="rp-save">Save &amp; Sync</button>' +
+          '<button id="rp-hubsync" class="rp-ghostbtn">Sync now</button>' +
+          '<span id="rp-hubstatus" class="rp-help"></span>' +
         '</div>' +
       '</div>' +
       '<div class="rp-alltabs">' +
