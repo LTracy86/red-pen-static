@@ -92,8 +92,17 @@
   .rp-add .rp-grow{flex:1}\
   .rp-pinbtn{background:#f1f1f3;border:1px solid #d4d7da;border-radius:4px;padding:.2rem .5rem;cursor:pointer;font:inherit;color:#444}\
   .rp-pinbtn.set{background:' + RED + ';color:#fff;border-color:' + RED + '}\
-  .rp-add .rp-save{background:' + RED + ';color:#fff;border:none;border-radius:14px;padding:.35rem .9rem;cursor:pointer}\
-  .rp-add .rp-save:hover{background:#b71c1c}\
+  .rp-save{background:' + RED + ';color:#fff;border:none;border-radius:14px;padding:.35rem .9rem;cursor:pointer}\
+  .rp-save:hover{background:#b71c1c}\
+  .rp-box{flex-direction:column;gap:.4rem;padding:.55rem .8rem;border-bottom:1px solid #eee}\
+  .rp-b{font-weight:600}\
+  .rp-help{font-size:12px;color:#888;font-weight:400}\
+  .rp-lbl{font-size:12px;display:flex;flex-direction:column;gap:.2rem}\
+  .rp-lblrow{font-size:12px;display:flex;align-items:center;gap:.4rem}\
+  .rp-field{box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:inherit}\
+  .rp-mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}\
+  .rp-ghostbtn{background:none;border:1px solid #d4d7da;border-radius:14px;padding:.35rem .8rem;cursor:pointer;color:#444}\
+  .rp-hubrow{display:flex;gap:.5rem;align-items:center}\
   #rp-pinlayer{position:fixed;inset:0;z-index:2147482000;pointer-events:none}\
   .rp-pin{position:fixed;transform:translate(-50%,-50%);min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:' + RED + ';color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);font:700 11px/1 sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;box-sizing:border-box}\
   .rp-pin.resolved{background:#9aa0a6}\
