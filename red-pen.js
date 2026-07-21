@@ -43,133 +43,145 @@
   function pinColor() { var v = ''; try { v = (localStorage.getItem(PIN_COLOR_KEY) || '').trim(); } catch (e) {} return HEX_RE.test(v) ? v : ''; }
 
   // ---- styles ----
+  // Host-page armor: the widget lives inside the host page, so site rules that
+  // style bare elements (button{}, p{}, a{} - often with !important) match our
+  // DOM too; namespaced classes cannot block element selectors. Defense:
+  // every declaration in this sheet carries !important (the widget wins any
+  // property it declares), and the two armor rules below pin the typography/
+  // reset properties the component rules do not declare. :where()/:is() keep
+  // the second rule at element specificity (0,0,1) so every .rp-* rule still
+  // overrides it, while site element rules lose (this sheet is injected after
+  // theirs). Do not add display here - it is toggled from JS/classes.
+  // Known residual gap: rem/vh units track the host page's root sizing.
   var css = '\
-  #rp-fab{position:fixed;right:20px;bottom:20px;z-index:2147483000;width:46px;height:46px;border-radius:50%;border:none;background:' + RED + ';color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(211,47,47,.45);display:flex;align-items:center;justify-content:center}\
-  #rp-fab:hover{background:#b71c1c}\
-  #rp-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#fff;color:' + RED + ';font:700 11px/18px sans-serif;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}\
-  #rp-panel{position:fixed;right:20px;bottom:78px;z-index:2147483000;width:344px;max-height:74vh;display:none;flex-direction:column;background:#fff;color:#1e2225;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.28);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}\
-  #rp-panel.open{display:flex}\
-  .rp-head{display:flex;align-items:center;gap:.4rem;padding:.6rem .75rem;background:' + RED + ';color:#fff;font-weight:600}\
-  .rp-head .rp-nib{width:14px;height:14px;flex:none}\
-  .rp-head .rp-repo{margin-left:auto;color:#fff;font-size:12px;font-weight:500;text-decoration:underline;cursor:pointer;background:none;border:none}\
-  .rp-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1;padding:0 .1rem}\
-  .rp-list{flex:1;overflow-y:auto;padding:.5rem .6rem;display:flex;flex-direction:column;gap:.45rem}\
-  .rp-empty{color:#888;text-align:center;padding:1rem 0}\
-  .rp-note{border:1px solid #e6e9ec;border-left:3px solid ' + RED + ';border-radius:5px;padding:.4rem .5rem}\
-  .rp-note.resolved{opacity:.6;border-left-color:#9aa0a6}\
-  .rp-note.progress{border-left-color:' + AMBER + '}\
-  .rp-status{border:1px solid #d4d7da;border-radius:4px;background:#fff;color:#444;font:inherit;font-size:12px;padding:.05rem .2rem;cursor:pointer}\
-  .rp-status:hover{border-color:' + RED + '}\
-  .rp-meta{display:flex;gap:.35rem;align-items:center;margin-bottom:.25rem;font-size:12px}\
-  .rp-num{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:' + RED + ';color:#fff;font:700 10px/16px sans-serif}\
-  .rp-tag{background:#f1f1f3;border-radius:3px;padding:.02rem .3rem}\
-  .rp-tag.bug{color:#c62828}.rp-tag.suggestion{color:#1565c0}.rp-tag.question{color:#9a6a00}\
-  .rp-prio.high{color:' + RED + ';font-weight:700}\
-  .rp-when{margin-left:auto;color:#999}\
-  .rp-body{white-space:pre-wrap;word-break:break-word}\
-  .rp-acts{display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap;align-items:center}\
-  .rp-acts button{background:none;border:none;color:#666;cursor:pointer;padding:.1rem .2rem;font-size:12px}\
-  .rp-acts button:hover{color:' + RED + '}\
-  .rp-replies{margin-top:.4rem;border-top:1px dashed #e6e9ec;padding-top:.4rem;display:flex;flex-direction:column;gap:.3rem}\
-  .rp-reply{font-size:12px;padding:.2rem .4rem;background:#f3f5f6;border-radius:4px}\
-  .rp-reply-meta{font-size:11px;color:#999;margin-bottom:.1rem}\
-  .rp-reply-body{white-space:pre-wrap;word-break:break-word}\
-  .rp-replyform{display:flex;gap:.3rem}\
-  .rp-replytext{flex:1;min-width:0;border:1px solid #d4d7da;border-radius:4px;padding:.25rem .4rem;font:inherit;font-size:12px;resize:vertical;box-sizing:border-box}\
-  .rp-replysend{background:#fff;border:1px solid #d4d7da;border-radius:4px;color:#444;font:inherit;font-size:12px;padding:.2rem .55rem;cursor:pointer;white-space:nowrap}\
-  .rp-replysend:hover{border-color:' + RED + ';color:' + RED + '}\
-  .rp-replycount{font-size:11.5px;color:#888;margin-top:.25rem}\
-  #rp-panel.rp-dark .rp-replies{border-top-color:#3a3f44}\
-  #rp-panel.rp-dark .rp-reply{background:#1f2327}\
-  #rp-panel.rp-dark .rp-reply-meta,#rp-panel.rp-dark .rp-replycount{color:#9aa0a6}\
-  #rp-panel.rp-dark .rp-replytext,#rp-panel.rp-dark .rp-replysend{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}\
-  #rp-allmodal.rp-dark .rp-reply{background:#1f2327}\
-  #rp-allmodal.rp-dark .rp-replycount{color:#9aa0a6}\
-  .rp-add{border-top:1px solid #eee;padding:.55rem .6rem;display:flex;flex-direction:column;gap:.4rem}\
-  .rp-add textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:46px;border:1px solid #d4d7da;border-radius:4px;padding:.4rem;font:inherit}\
-  .rp-add .rp-row{display:flex;gap:.4rem;align-items:center}\
-  .rp-add select{border:1px solid #d4d7da;border-radius:4px;padding:.2rem}\
-  .rp-add .rp-grow{flex:1}\
-  .rp-pinbtn{background:#f1f1f3;border:1px solid #d4d7da;border-radius:4px;padding:.2rem .5rem;cursor:pointer;font:inherit;color:#444}\
-  .rp-pinbtn.set{background:' + RED + ';color:#fff;border-color:' + RED + '}\
-  .rp-save{background:' + RED + ';color:#fff;border:none;border-radius:14px;padding:.35rem .9rem;cursor:pointer}\
-  .rp-save:hover{background:#b71c1c}\
-  .rp-box{flex-direction:column;gap:.4rem;padding:.55rem .8rem;border-bottom:1px solid #eee}\
-  .rp-b{font-weight:600}\
-  .rp-help{font-size:12px;color:#888;font-weight:400}\
-  .rp-lbl{font-size:12px;display:flex;flex-direction:column;gap:.2rem}\
-  .rp-lblrow{font-size:12px;display:flex;align-items:center;gap:.4rem}\
-  .rp-field{box-sizing:border-box;width:100%;border:1px solid #d4d7da;border-radius:4px;padding:.35rem;font:inherit}\
-  .rp-mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}\
-  .rp-ghostbtn{background:none;border:1px solid #d4d7da;border-radius:14px;padding:.35rem .8rem;cursor:pointer;color:#444}\
-  .rp-hubrow{display:flex;gap:.5rem;align-items:center}\
-  #rp-pinlayer{position:fixed;inset:0;z-index:2147482000;pointer-events:none}\
-  .rp-pin{position:fixed;transform:translate(-50%,-50%);min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:' + RED + ';color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);font:700 11px/1 sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;box-sizing:border-box}\
-  .rp-pin.resolved{background:#9aa0a6}\
-  .rp-pin.progress{background:' + AMBER + '}\
-  .rp-pin:hover{filter:brightness(.9)}\
-  #rp-pinmode{position:fixed;inset:0;z-index:2147483600;cursor:crosshair;background:rgba(211,47,47,.06)}\
-  #rp-pinhl{position:fixed;z-index:2147483500;border:2px solid ' + RED + ';background:rgba(211,47,47,.12);pointer-events:none;box-sizing:border-box;display:none}\
-  #rp-hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:2147483700;background:#1e2225;color:#fff;font:13px/1 -apple-system,sans-serif;padding:.5rem .9rem;border-radius:6px;pointer-events:none}\
-  #rp-loc{position:fixed;z-index:2147482500;border:3px solid ' + RED + ';border-radius:4px;background:rgba(211,47,47,.08);box-shadow:0 0 0 2px rgba(255,255,255,.5);pointer-events:none;transition:opacity .3s;display:none}\
-  .rp-theme{background:none;border:none;color:#fff;font-size:15px;cursor:pointer;line-height:1;padding:0 .15rem}\
-  #rp-panel.rp-dark{background:#23272b;color:#e6e9ec}\
-  #rp-panel.rp-dark .rp-note{background:#2a2f34;border-color:#3a3f44}\
-  #rp-panel.rp-dark .rp-note.resolved{border-left-color:#6b7177}\
-  #rp-panel.rp-dark .rp-tag{background:#3a3f44;color:#e6e9ec}\
-  #rp-panel.rp-dark .rp-when,#rp-panel.rp-dark .rp-empty{color:#9aa0a6}\
-  #rp-panel.rp-dark .rp-add{border-top-color:#3a3f44}\
-  #rp-panel.rp-dark textarea,#rp-panel.rp-dark select,#rp-panel.rp-dark input[type="text"]{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}\
-  #rp-panel.rp-dark .rp-pinbtn{background:#3a3f44;color:#e6e9ec;border-color:#4a4f55}\
-  #rp-panel.rp-dark .rp-acts button{color:#9aa0a6}\
-  #rp-panel.rp-dark .rp-status{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}\
-  .rp-editbar{display:none;align-items:center;justify-content:space-between;gap:.5rem;font-size:12px;color:' + RED + ';background:#fff4f4;border:1px solid #f3c0c0;border-radius:5px;padding:.25rem .5rem;margin-bottom:.4rem}\
-  .rp-editbar.on{display:flex}\
-  .rp-editbar button{background:none;border:none;color:#666;text-decoration:underline;cursor:pointer;font:inherit}\
-  .rp-editbar button:hover{color:' + RED + '}\
-  #rp-panel.rp-dark .rp-editbar{background:#3a2526;border-color:#6b3a3c;color:#ff8a80}\
-  #rp-toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:2147483900;background:#b71c1c;color:#fff;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:.45rem .8rem;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.4);max-width:80vw;display:none;align-items:center;gap:.6rem}\
-  #rp-toast.on{display:flex}\
-  .rp-toast-btn{background:none;border:1px solid rgba(255,255,255,.55);color:#fff;border-radius:4px;font:inherit;font-size:12px;font-weight:600;padding:.1rem .5rem;cursor:pointer}\
-  .rp-toast-btn:hover{background:rgba(255,255,255,.18)}\
-  .rp-resize{position:absolute;left:0;top:0;width:8px;height:100%;cursor:ew-resize;z-index:5}\
-  .rp-resize::before{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:3px;height:34px;border-radius:2px;background:#cfd4d8;transition:background .12s}\
-  .rp-resize:hover::before{background:' + RED + '}\
-  #rp-panel.rp-dark .rp-resize::before{background:#4a4f55}\
-  #rp-allmodal{position:fixed;inset:0;z-index:2147483800;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}\
-  #rp-allmodal.open{display:flex}\
-  .rp-allcard{background:#fff;color:#1e2225;width:600px;max-width:92vw;max-height:82vh;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.4)}\
-  .rp-allhead{display:flex;align-items:center;gap:.4rem;padding:.6rem .8rem;background:' + RED + ';color:#fff;font-weight:600}\
-  .rp-allhead .rp-grow{flex:1}\
-  .rp-allhead button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:5px;padding:.2rem .55rem;cursor:pointer;font:inherit;font-size:12px}\
-  .rp-allhead button.rp-x{background:none;border:none;font-size:18px;padding:0 .15rem}\
-  .rp-alltabs{display:flex;gap:.3rem;padding:.4rem .8rem 0}\
-  .rp-alltab{background:none;border:none;border-bottom:2px solid transparent;color:#888;font:inherit;cursor:pointer;padding:.25rem .4rem}\
-  .rp-alltab.active{color:' + RED + ';border-bottom-color:' + RED + '}\
-  .rp-allfilters{display:flex;gap:.4rem;padding:.45rem .8rem 0}\
-  .rp-allfilters input,.rp-allfilters select{border:1px solid #d4d7da;border-radius:4px;padding:.25rem .4rem;font:inherit;font-size:12px;color:#1e2225;background:#fff}\
-  .rp-allfilters input{flex:1;min-width:0}\
-  .rp-bulkbar{display:flex;gap:.4rem;align-items:center;padding:.45rem .8rem 0;font-size:12px;color:#666}\
-  .rp-bulkbar select,.rp-bulkbar button{border:1px solid #d4d7da;border-radius:4px;padding:.2rem .4rem;font:inherit;font-size:12px;cursor:pointer;background:#fff;color:#444}\
-  .rp-bulkbar button:hover{border-color:' + RED + ';color:' + RED + '}\
-  .rp-allnote .rp-allcb{margin-right:.4rem}\
-  #rp-allmodal.rp-dark .rp-allfilters input,#rp-allmodal.rp-dark .rp-allfilters select,#rp-allmodal.rp-dark .rp-bulkbar select,#rp-allmodal.rp-dark .rp-bulkbar button{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}\
-  #rp-allmodal.rp-dark .rp-bulkbar{color:#9aa0a6}\
-  .rp-alllist{flex:1;overflow-y:auto;padding:.5rem .8rem .8rem;display:flex;flex-direction:column;gap:.45rem}\
-  .rp-allnote{border:1px solid #e6e9ec;border-left:3px solid ' + RED + ';border-radius:5px;padding:.4rem .55rem}\
-  .rp-allnote.resolved{opacity:.6;border-left-color:#9aa0a6}\
-  .rp-allnote.progress{border-left-color:' + AMBER + '}\
-  .rp-allpage{color:#1565c0;font-size:11.5px;word-break:break-all;cursor:pointer;text-decoration:underline}\
-  #rp-allmodal.rp-dark .rp-allcard{background:#23272b;color:#e6e9ec}\
-  #rp-allmodal.rp-dark .rp-allnote{background:#2a2f34;border-color:#3a3f44}\
-  #rp-allmodal.rp-dark .rp-allpage{color:#6db3ff}\
-  #rp-allmodal.rp-dark .rp-alltab{color:#9aa0a6}\
-  #rp-allmodal.rp-dark .rp-tag{background:#3a3f44;color:#e6e9ec}\
-  #rp-allmodal.rp-dark #rp-hubbox{border-bottom-color:#3a3f44}\
-  #rp-allmodal.rp-dark #rp-hubbox input{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}\
-  #rp-allmodal.rp-dark #rp-hubsync{background:#3a3f44;color:#e6e9ec;border-color:#4a4f55}\
-  #rp-allmodal.rp-dark #rp-setbox{border-bottom-color:#3a3f44}\
-  #rp-allmodal.rp-dark #rp-setbox textarea{background:#1a1d20;color:#e6e9ec;border-color:#3a3f44}';
+  #rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important}\
+  :where(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) :is(a,button,select,textarea,input,label,p,span,div,ul,ol,li,img,svg,h1,h2,h3,h4,h5,h6){font-family:inherit!important;font-size:inherit!important;font-weight:inherit!important;font-style:inherit!important;line-height:inherit!important;color:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;text-shadow:none!important;text-decoration:none!important;box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;float:none!important;list-style:none!important}\
+  #rp-fab{position:fixed!important;right:20px!important;bottom:20px!important;z-index:2147483000!important;width:46px!important;height:46px!important;border-radius:50%!important;border:none!important;background:' + RED + '!important;color:#fff!important;font-size:20px!important;cursor:pointer!important;box-shadow:0 4px 14px rgba(211,47,47,.45)!important;display:flex!important;align-items:center!important;justify-content:center!important}\
+  #rp-fab:hover{background:#b71c1c!important}\
+  #rp-badge{position:absolute!important;top:-4px!important;right:-4px!important;min-width:18px!important;height:18px!important;padding:0 4px!important;border-radius:9px!important;background:#fff!important;color:' + RED + '!important;font:700 11px/18px sans-serif!important;text-align:center!important;box-shadow:0 1px 3px rgba(0,0,0,.3)!important}\
+  #rp-panel{position:fixed!important;right:20px!important;bottom:78px!important;z-index:2147483000!important;width:344px!important;max-height:74vh!important;display:none!important;flex-direction:column!important;background:#fff!important;color:#1e2225!important;border-radius:8px!important;box-shadow:0 8px 30px rgba(0,0,0,.28)!important;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;overflow:hidden!important}\
+  #rp-panel.rp-open{display:flex!important}\
+  .rp-head{display:flex!important;align-items:center!important;gap:.4rem!important;padding:.6rem .75rem!important;background:' + RED + '!important;color:#fff!important;font-weight:600!important}\
+  .rp-head .rp-nib{width:14px!important;height:14px!important;flex:none!important}\
+  .rp-head .rp-repo{margin-left:auto!important;color:#fff!important;font-size:12px!important;font-weight:500!important;text-decoration:underline!important;cursor:pointer!important;background:none!important;border:none!important}\
+  .rp-close{background:none!important;border:none!important;color:#fff!important;font-size:18px!important;cursor:pointer!important;line-height:1!important;padding:0 .1rem!important}\
+  .rp-list{flex:1!important;overflow-y:auto!important;padding:.5rem .6rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
+  .rp-empty{color:#888!important;text-align:center!important;padding:1rem 0!important}\
+  .rp-note{border:1px solid #e6e9ec!important;border-left:3px solid ' + RED + '!important;border-radius:5px!important;padding:.4rem .5rem!important}\
+  .rp-note.rp-resolved{opacity:.6!important;border-left-color:#9aa0a6!important}\
+  .rp-note.rp-progress{border-left-color:' + AMBER + '!important}\
+  .rp-status{border:1px solid #d4d7da!important;border-radius:4px!important;background:#fff!important;color:#444!important;font:inherit!important;font-size:12px!important;padding:.05rem .2rem!important;cursor:pointer!important}\
+  .rp-status:hover{border-color:' + RED + '!important}\
+  .rp-meta{display:flex!important;gap:.35rem!important;align-items:center!important;margin-bottom:.25rem!important;font-size:12px!important}\
+  .rp-num{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:16px!important;height:16px!important;padding:0 3px!important;border-radius:8px!important;background:' + RED + '!important;color:#fff!important;font:700 10px/16px sans-serif!important}\
+  .rp-tag{background:#f1f1f3!important;border-radius:3px!important;padding:.02rem .3rem!important}\
+  .rp-tag.bug{color:#c62828!important}.rp-tag.suggestion{color:#1565c0!important}.rp-tag.question{color:#9a6a00!important}\
+  .rp-prio.high{color:' + RED + '!important;font-weight:700!important}\
+  .rp-when{margin-left:auto!important;color:#999!important}\
+  .rp-body{white-space:pre-wrap!important;word-break:break-word!important}\
+  .rp-acts{display:flex!important;gap:.4rem!important;margin-top:.3rem!important;flex-wrap:wrap!important;align-items:center!important}\
+  .rp-acts button{background:none!important;border:none!important;color:#666!important;cursor:pointer!important;padding:.1rem .2rem!important;font-size:12px!important}\
+  .rp-acts button:hover{color:' + RED + '!important}\
+  .rp-replies{margin-top:.4rem!important;border-top:1px dashed #e6e9ec!important;padding-top:.4rem!important;display:flex!important;flex-direction:column!important;gap:.3rem!important}\
+  .rp-reply{font-size:12px!important;padding:.2rem .4rem!important;background:#f3f5f6!important;border-radius:4px!important}\
+  .rp-reply-meta{font-size:11px!important;color:#999!important;margin-bottom:.1rem!important}\
+  .rp-reply-body{white-space:pre-wrap!important;word-break:break-word!important}\
+  .rp-replyform{display:flex!important;gap:.3rem!important}\
+  .rp-replytext{flex:1!important;min-width:0!important;border:1px solid #d4d7da!important;border-radius:4px!important;padding:.25rem .4rem!important;font:inherit!important;font-size:12px!important;resize:vertical!important;box-sizing:border-box!important}\
+  .rp-replysend{background:#fff!important;border:1px solid #d4d7da!important;border-radius:4px!important;color:#444!important;font:inherit!important;font-size:12px!important;padding:.2rem .55rem!important;cursor:pointer!important;white-space:nowrap!important}\
+  .rp-replysend:hover{border-color:' + RED + '!important;color:' + RED + '!important}\
+  .rp-replycount{font-size:11.5px!important;color:#888!important;margin-top:.25rem!important}\
+  #rp-panel.rp-dark .rp-replies{border-top-color:#3a3f44!important}\
+  #rp-panel.rp-dark .rp-reply{background:#1f2327!important}\
+  #rp-panel.rp-dark .rp-reply-meta,#rp-panel.rp-dark .rp-replycount{color:#9aa0a6!important}\
+  #rp-panel.rp-dark .rp-replytext,#rp-panel.rp-dark .rp-replysend{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark .rp-reply{background:#1f2327!important}\
+  #rp-allmodal.rp-dark .rp-replycount{color:#9aa0a6!important}\
+  .rp-add{border-top:1px solid #eee!important;padding:.55rem .6rem!important;display:flex!important;flex-direction:column!important;gap:.4rem!important}\
+  .rp-add textarea{width:100%!important;box-sizing:border-box!important;resize:vertical!important;min-height:46px!important;border:1px solid #d4d7da!important;border-radius:4px!important;padding:.4rem!important;font:inherit!important}\
+  .rp-add .rp-row{display:flex!important;gap:.4rem!important;align-items:center!important}\
+  .rp-add select{border:1px solid #d4d7da!important;border-radius:4px!important;padding:.2rem!important}\
+  .rp-add .rp-grow{flex:1!important}\
+  .rp-pinbtn{background:#f1f1f3!important;border:1px solid #d4d7da!important;border-radius:4px!important;padding:.2rem .5rem!important;cursor:pointer!important;font:inherit!important;color:#444!important}\
+  .rp-pinbtn.rp-set{background:' + RED + '!important;color:#fff!important;border-color:' + RED + '!important}\
+  .rp-save{background:' + RED + '!important;color:#fff!important;border:none!important;border-radius:14px!important;padding:.35rem .9rem!important;cursor:pointer!important}\
+  .rp-save:hover{background:#b71c1c!important}\
+  .rp-box{flex-direction:column!important;gap:.4rem!important;padding:.55rem .8rem!important;border-bottom:1px solid #eee!important}\
+  .rp-b{font-weight:600!important}\
+  .rp-help{font-size:12px!important;color:#888!important;font-weight:400!important}\
+  .rp-lbl{font-size:12px!important;display:flex!important;flex-direction:column!important;gap:.2rem!important}\
+  .rp-lblrow{font-size:12px!important;display:flex!important;align-items:center!important;gap:.4rem!important}\
+  .rp-field{box-sizing:border-box!important;width:100%!important;border:1px solid #d4d7da!important;border-radius:4px!important;padding:.35rem!important;font:inherit!important}\
+  .rp-mono{font-family:ui-monospace,Menlo,Consolas,monospace!important;font-size:12px!important}\
+  .rp-ghostbtn{background:none!important;border:1px solid #d4d7da!important;border-radius:14px!important;padding:.35rem .8rem!important;cursor:pointer!important;color:#444!important}\
+  .rp-hubrow{display:flex!important;gap:.5rem!important;align-items:center!important}\
+  #rp-pinlayer{position:fixed!important;inset:0!important;z-index:2147482000!important;pointer-events:none!important}\
+  .rp-pin{position:fixed!important;transform:translate(-50%,-50%)!important;min-width:22px!important;height:22px!important;padding:0 5px!important;border-radius:11px!important;background:' + RED + '!important;color:#fff!important;border:2px solid #fff!important;box-shadow:0 2px 6px rgba(0,0,0,.4)!important;font:700 11px/1 sans-serif!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;pointer-events:auto!important;box-sizing:border-box!important}\
+  .rp-pin.rp-resolved{background:#9aa0a6!important}\
+  .rp-pin.rp-progress{background:' + AMBER + '!important}\
+  .rp-pin:hover{filter:brightness(.9)!important}\
+  #rp-pinmode{position:fixed!important;inset:0!important;z-index:2147483600!important;cursor:crosshair!important;background:rgba(211,47,47,.06)!important}\
+  #rp-pinhl{position:fixed!important;z-index:2147483500!important;border:2px solid ' + RED + '!important;background:rgba(211,47,47,.12)!important;pointer-events:none!important;box-sizing:border-box!important;display:none!important}\
+  #rp-hint{position:fixed!important;top:14px!important;left:50%!important;transform:translateX(-50%)!important;z-index:2147483700!important;background:#1e2225!important;color:#fff!important;font:13px/1 -apple-system,sans-serif!important;padding:.5rem .9rem!important;border-radius:6px!important;pointer-events:none!important}\
+  #rp-loc{position:fixed!important;z-index:2147482500!important;border:3px solid ' + RED + '!important;border-radius:4px!important;background:rgba(211,47,47,.08)!important;box-shadow:0 0 0 2px rgba(255,255,255,.5)!important;pointer-events:none!important;transition:opacity .3s!important;display:none!important}\
+  .rp-theme{background:none!important;border:none!important;color:#fff!important;font-size:15px!important;cursor:pointer!important;line-height:1!important;padding:0 .15rem!important}\
+  #rp-panel.rp-dark{background:#23272b!important;color:#e6e9ec!important}\
+  #rp-panel.rp-dark .rp-note{background:#2a2f34!important;border-color:#3a3f44!important}\
+  #rp-panel.rp-dark .rp-note.rp-resolved{border-left-color:#6b7177!important}\
+  #rp-panel.rp-dark .rp-tag{background:#3a3f44!important;color:#e6e9ec!important}\
+  #rp-panel.rp-dark .rp-when,#rp-panel.rp-dark .rp-empty{color:#9aa0a6!important}\
+  #rp-panel.rp-dark .rp-add{border-top-color:#3a3f44!important}\
+  #rp-panel.rp-dark textarea,#rp-panel.rp-dark select,#rp-panel.rp-dark input[type="text"]{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  #rp-panel.rp-dark .rp-pinbtn{background:#3a3f44!important;color:#e6e9ec!important;border-color:#4a4f55!important}\
+  #rp-panel.rp-dark .rp-acts button{color:#9aa0a6!important}\
+  #rp-panel.rp-dark .rp-status{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  .rp-editbar{display:none!important;align-items:center!important;justify-content:space-between!important;gap:.5rem!important;font-size:12px!important;color:' + RED + '!important;background:#fff4f4!important;border:1px solid #f3c0c0!important;border-radius:5px!important;padding:.25rem .5rem!important;margin-bottom:.4rem!important}\
+  .rp-editbar.rp-on{display:flex!important}\
+  .rp-editbar button{background:none!important;border:none!important;color:#666!important;text-decoration:underline!important;cursor:pointer!important;font:inherit!important}\
+  .rp-editbar button:hover{color:' + RED + '!important}\
+  #rp-panel.rp-dark .rp-editbar{background:#3a2526!important;border-color:#6b3a3c!important;color:#ff8a80!important}\
+  #rp-toast{position:fixed!important;left:50%!important;bottom:78px!important;transform:translateX(-50%)!important;z-index:2147483900!important;background:#b71c1c!important;color:#fff!important;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;padding:.45rem .8rem!important;border-radius:6px!important;box-shadow:0 4px 14px rgba(0,0,0,.4)!important;max-width:80vw!important;display:none!important;align-items:center!important;gap:.6rem!important}\
+  #rp-toast.rp-on{display:flex!important}\
+  .rp-toast-btn{background:none!important;border:1px solid rgba(255,255,255,.55)!important;color:#fff!important;border-radius:4px!important;font:inherit!important;font-size:12px!important;font-weight:600!important;padding:.1rem .5rem!important;cursor:pointer!important}\
+  .rp-toast-btn:hover{background:rgba(255,255,255,.18)!important}\
+  .rp-resize{position:absolute!important;left:0!important;top:0!important;width:8px!important;height:100%!important;cursor:ew-resize!important;z-index:5!important}\
+  .rp-resize::before{content:""!important;position:absolute!important;left:2px!important;top:50%!important;transform:translateY(-50%)!important;width:3px!important;height:34px!important;border-radius:2px!important;background:#cfd4d8!important;transition:background .12s!important}\
+  .rp-resize:hover::before{background:' + RED + '!important}\
+  #rp-panel.rp-dark .rp-resize::before{background:#4a4f55!important}\
+  #rp-allmodal{position:fixed!important;inset:0!important;z-index:2147483800!important;background:rgba(0,0,0,.45)!important;display:none!important;align-items:center!important;justify-content:center!important;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important}\
+  #rp-allmodal.rp-open{display:flex!important}\
+  .rp-allcard{background:#fff!important;color:#1e2225!important;width:600px!important;max-width:92vw!important;max-height:82vh!important;border-radius:8px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;box-shadow:0 12px 40px rgba(0,0,0,.4)!important}\
+  .rp-allhead{display:flex!important;align-items:center!important;gap:.4rem!important;padding:.6rem .8rem!important;background:' + RED + '!important;color:#fff!important;font-weight:600!important}\
+  .rp-allhead .rp-grow{flex:1!important}\
+  .rp-allhead button{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important;border-radius:5px!important;padding:.2rem .55rem!important;cursor:pointer!important;font:inherit!important;font-size:12px!important}\
+  .rp-allhead button.rp-x{background:none!important;border:none!important;font-size:18px!important;padding:0 .15rem!important}\
+  .rp-alltabs{display:flex!important;gap:.3rem!important;padding:.4rem .8rem 0!important}\
+  .rp-alltab{background:none!important;border:none!important;border-bottom:2px solid transparent!important;color:#888!important;font:inherit!important;cursor:pointer!important;padding:.25rem .4rem!important}\
+  .rp-alltab.rp-active{color:' + RED + '!important;border-bottom-color:' + RED + '!important}\
+  .rp-allfilters{display:flex!important;gap:.4rem!important;padding:.45rem .8rem 0!important}\
+  .rp-allfilters input,.rp-allfilters select{border:1px solid #d4d7da!important;border-radius:4px!important;padding:.25rem .4rem!important;font:inherit!important;font-size:12px!important;color:#1e2225!important;background:#fff!important}\
+  .rp-allfilters input{flex:1!important;min-width:0!important}\
+  .rp-bulkbar{display:flex!important;gap:.4rem!important;align-items:center!important;padding:.45rem .8rem 0!important;font-size:12px!important;color:#666!important}\
+  .rp-bulkbar select,.rp-bulkbar button{border:1px solid #d4d7da!important;border-radius:4px!important;padding:.2rem .4rem!important;font:inherit!important;font-size:12px!important;cursor:pointer!important;background:#fff!important;color:#444!important}\
+  .rp-bulkbar button:hover{border-color:' + RED + '!important;color:' + RED + '!important}\
+  .rp-allnote .rp-allcb{margin-right:.4rem!important}\
+  #rp-allmodal.rp-dark .rp-allfilters input,#rp-allmodal.rp-dark .rp-allfilters select,#rp-allmodal.rp-dark .rp-bulkbar select,#rp-allmodal.rp-dark .rp-bulkbar button{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark .rp-bulkbar{color:#9aa0a6!important}\
+  .rp-alllist{flex:1!important;overflow-y:auto!important;padding:.5rem .8rem .8rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
+  .rp-allnote{border:1px solid #e6e9ec!important;border-left:3px solid ' + RED + '!important;border-radius:5px!important;padding:.4rem .55rem!important}\
+  .rp-allnote.rp-resolved{opacity:.6!important;border-left-color:#9aa0a6!important}\
+  .rp-allnote.rp-progress{border-left-color:' + AMBER + '!important}\
+  .rp-allpage{color:#1565c0!important;font-size:11.5px!important;word-break:break-all!important;cursor:pointer!important;text-decoration:underline!important}\
+  #rp-allmodal.rp-dark .rp-allcard{background:#23272b!important;color:#e6e9ec!important}\
+  #rp-allmodal.rp-dark .rp-allnote{background:#2a2f34!important;border-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark .rp-allpage{color:#6db3ff!important}\
+  #rp-allmodal.rp-dark .rp-alltab{color:#9aa0a6!important}\
+  #rp-allmodal.rp-dark .rp-tag{background:#3a3f44!important;color:#e6e9ec!important}\
+  #rp-allmodal.rp-dark #rp-hubbox{border-bottom-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark #rp-hubbox input{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark #rp-hubsync{background:#3a3f44!important;color:#e6e9ec!important;border-color:#4a4f55!important}\
+  #rp-allmodal.rp-dark #rp-setbox{border-bottom-color:#3a3f44!important}\
+  #rp-allmodal.rp-dark #rp-setbox textarea{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}';
 
   var style = document.createElement('style');
   style.textContent = css;
@@ -260,13 +272,13 @@
   var editingId = null;    // id of the note being edited, or null in add mode
 
   fab.addEventListener('click', function () {
-    panel.classList.toggle('open');
-    if (panel.classList.contains('open')) load();
+    panel.classList.toggle('rp-open');
+    if (panel.classList.contains('rp-open')) load();
   });
-  panel.querySelector('.rp-close').addEventListener('click', function () { panel.classList.remove('open'); });
+  panel.querySelector('.rp-close').addEventListener('click', function () { panel.classList.remove('rp-open'); });
   document.getElementById('rp-repo').addEventListener('click', openAll);
-  document.getElementById('rp-allclose').addEventListener('click', function () { allModal.classList.remove('open'); });
-  allModal.addEventListener('click', function (e) { if (e.target === allModal) allModal.classList.remove('open'); });
+  document.getElementById('rp-allclose').addEventListener('click', function () { allModal.classList.remove('rp-open'); });
+  allModal.addEventListener('click', function (e) { if (e.target === allModal) allModal.classList.remove('rp-open'); });
   document.getElementById('rp-export').addEventListener('click', exportNotes);
   document.getElementById('rp-import').addEventListener('click', function () { document.getElementById('rp-importfile').click(); });
   document.getElementById('rp-importfile').addEventListener('change', importNotes);
@@ -278,7 +290,7 @@
   document.querySelector('.rp-alltabs').addEventListener('click', function (e) {
     var b = e.target.closest('.rp-alltab'); if (!b) return;
     allFilter = b.getAttribute('data-f');
-    [].forEach.call(document.querySelectorAll('.rp-alltab'), function (t) { t.classList.toggle('active', t === b); });
+    [].forEach.call(document.querySelectorAll('.rp-alltab'), function (t) { t.classList.toggle('rp-active', t === b); });
     renderAll();
   });
   document.getElementById('rp-search').addEventListener('input', function () { searchTerm = this.value.trim().toLowerCase(); renderAll(); });
@@ -318,11 +330,11 @@
   // Esc closes the All-notes modal, then the panel (pin mode owns Esc while it's active).
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape' || pinmode) return;
-    if (allModal.classList.contains('open')) { allModal.classList.remove('open'); return; }
-    if (panel.classList.contains('open')) { if (editingId) exitEdit(); panel.classList.remove('open'); }
+    if (allModal.classList.contains('rp-open')) { allModal.classList.remove('rp-open'); return; }
+    if (panel.classList.contains('rp-open')) { if (editingId) exitEdit(); panel.classList.remove('rp-open'); }
   });
   (function () { // resizable panel
-    try { var w0 = parseInt(localStorage.getItem(WIDTH_KEY), 10); if (w0 >= 300 && w0 <= 900) panel.style.width = w0 + 'px'; } catch (e) {}
+    try { var w0 = parseInt(localStorage.getItem(WIDTH_KEY), 10); if (w0 >= 300 && w0 <= 900) panel.style.setProperty('width', w0 + 'px', 'important'); } catch (e) {}
     var handle = document.getElementById('rp-resize');
     var dragging = false;
     handle.addEventListener('mousedown', function (e) { dragging = true; e.preventDefault(); document.body.style.userSelect = 'none'; });
@@ -330,7 +342,7 @@
       if (!dragging) return;
       var w = (window.innerWidth - 20) - e.clientX;
       w = Math.max(300, Math.min(w, window.innerWidth - 40));
-      panel.style.width = w + 'px';
+      panel.style.setProperty('width', w + 'px', 'important');
     });
     document.addEventListener('mouseup', function () {
       if (!dragging) return;
@@ -403,7 +415,7 @@
       else { delete n.resolvedAt; }
       saveAll(all);
     }
-    load(); if (allModal.classList.contains('open')) renderAll();
+    load(); if (allModal.classList.contains('rp-open')) renderAll();
     maybeAutoPush();
     // Offer an Undo for a real, user-initiated status change (not the undo itself).
     if (n && !opts.isUndo && prev !== status) {
@@ -418,17 +430,17 @@
     setSelVal(document.getElementById('rp-prio'), n.priority);
     pendingAnchor = (n.anchor && n.anchor.sel) ? n.anchor : null;
     var pb = document.getElementById('rp-pin');
-    if (pendingAnchor) { pb.classList.add('set'); pb.innerHTML = '&#128205; Pinned'; }
-    else { pb.classList.remove('set'); pb.innerHTML = '&#128205; Pin'; }
-    document.getElementById('rp-editbar').classList.add('on');
+    if (pendingAnchor) { pb.classList.add('rp-set'); pb.innerHTML = '&#128205; Pinned'; }
+    else { pb.classList.remove('rp-set'); pb.innerHTML = '&#128205; Pin'; }
+    document.getElementById('rp-editbar').classList.add('rp-on');
     document.getElementById('rp-add').textContent = 'Save';
-    panel.classList.add('open');
+    panel.classList.add('rp-open');
     document.getElementById('rp-body').focus();
   }
   function exitEdit() {
     editingId = null;
     document.getElementById('rp-body').value = '';
-    document.getElementById('rp-editbar').classList.remove('on');
+    document.getElementById('rp-editbar').classList.remove('rp-on');
     document.getElementById('rp-add').textContent = 'Add';
     clearPending();
     applyPrefs();
@@ -478,7 +490,7 @@
     rebuildTypeSelect();
     rebuildTypeFilter();
     document.getElementById('rp-setbox').style.display = 'none';
-    load(); if (allModal.classList.contains('open')) renderAll();
+    load(); if (allModal.classList.contains('rp-open')) renderAll();
   }
   // ---- transient toast (with an optional action, e.g. Undo) ----
   var toastEl = null, toastTimer = null;
@@ -488,16 +500,16 @@
     var span = document.createElement('span'); span.textContent = msg; toastEl.appendChild(span);
     if (actionLabel && actionFn) {
       var btn = el('button', { cls: 'rp-toast-btn' }); btn.textContent = actionLabel;
-      btn.addEventListener('click', function () { if (toastTimer) clearTimeout(toastTimer); toastEl.classList.remove('on'); actionFn(); });
+      btn.addEventListener('click', function () { if (toastTimer) clearTimeout(toastTimer); toastEl.classList.remove('rp-on'); actionFn(); });
       toastEl.appendChild(btn);
     }
-    toastEl.classList.add('on');
+    toastEl.classList.add('rp-on');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { if (toastEl) toastEl.classList.remove('on'); }, actionLabel ? 6000 : 3500);
+    toastTimer = setTimeout(function () { if (toastEl) toastEl.classList.remove('rp-on'); }, actionLabel ? 6000 : 3500);
   }
   function del(id) {
     saveAll(loadAll().filter(function (n) { return n.id !== id; }));
-    load(); if (allModal.classList.contains('open')) renderAll();
+    load(); if (allModal.classList.contains('rp-open')) renderAll();
     maybeAutoPush();
   }
   function addReply(id, text) {
@@ -508,14 +520,14 @@
     if (!n.replies) n.replies = [];
     n.replies.push({ id: uid(), body: text, createdAt: new Date().toISOString() });
     saveAll(all);
-    load(); if (allModal.classList.contains('open')) renderAll();
+    load(); if (allModal.classList.contains('rp-open')) renderAll();
     // Replies aren't part of the Hub payload (mirrors the WP push), so no auto-push here.
   }
   function replyCount(n) { return (n.replies && n.replies.length) || 0; }
   function clearPending() {
     pendingAnchor = null;
     var b = document.getElementById('rp-pin');
-    b.classList.remove('set');
+    b.classList.remove('rp-set');
     b.innerHTML = '&#128205; Pin';
   }
 
@@ -605,7 +617,7 @@
       else if (n.resolvedAt) { delete n.resolvedAt; }
       applied++;
     });
-    if (applied) { saveAll(all); load(); if (allModal.classList.contains('open')) { renderAll(); } }
+    if (applied) { saveAll(all); load(); if (allModal.classList.contains('rp-open')) { renderAll(); } }
     return applied;
   }
   function pushToHub(opts) {
@@ -703,7 +715,7 @@
     list.innerHTML = '';
     sorted.forEach(function (n) {
       var num = pinNums[n.id];
-      var d = el('div', { cls: 'rp-note ' + statusKey(n) });
+      var d = el('div', { cls: 'rp-note rp-' + statusKey(n) });
       d.innerHTML =
         '<div class="rp-meta">' +
           (num ? '<span class="rp-num">' + num + '</span>' : '') +
@@ -726,7 +738,7 @@
   }
 
   // ---- All notes modal (the repository, across pages) ----
-  function openAll() { rebuildTypeFilter(); allModal.classList.add('open'); renderAll(); }
+  function openAll() { rebuildTypeFilter(); allModal.classList.add('rp-open'); renderAll(); }
   // Populate the repo type-filter dropdown (built-ins + custom types).
   function rebuildTypeFilter() {
     var sel = document.getElementById('rp-typefilter'); if (!sel) return;
@@ -773,7 +785,7 @@
     }
     list.innerHTML = '';
     rows.forEach(function (n) {
-      var d = el('div', { cls: 'rp-allnote ' + statusKey(n) });
+      var d = el('div', { cls: 'rp-allnote rp-' + statusKey(n) });
       d.innerHTML =
         '<div class="rp-meta">' +
           '<input type="checkbox" class="rp-allcb" data-id="' + esc(n.id) + '">' +
@@ -809,9 +821,9 @@
     var pc = pinColor();
     notes.forEach(function (n) {
       if (!anchored(n) || n.status === 'resolved') return;
-      var marker = el('button', { cls: 'rp-pin ' + statusKey(n) });
+      var marker = el('button', { cls: 'rp-pin rp-' + statusKey(n) });
       marker.textContent = nums[n.id] || '';
-      if (pc && statusKey(n) === 'open') marker.style.background = pc; // custom colour, open pins only
+      if (pc && statusKey(n) === 'open') marker.style.setProperty('background', pc, 'important'); // custom colour, open pins only
       marker.title = typeLabel(n.type) + ': ' + (n.body || '').slice(0, 80);
       (function (note) { marker.addEventListener('click', function () { openTo(note); }); })(n);
       pinLayer.appendChild(marker);
@@ -823,20 +835,20 @@
     pins.forEach(function (p) {
       var target;
       try { target = document.querySelector(p.note.anchor.sel); } catch (e) { target = null; }
-      if (!target) { p.marker.style.display = 'none'; return; }
+      if (!target) { p.marker.style.setProperty('display', 'none', 'important'); return; }
       var r = target.getBoundingClientRect();
-      p.marker.style.display = 'flex';
+      p.marker.style.setProperty('display', 'flex', 'important');
       p.marker.style.left = (r.left + (p.note.anchor.x || 0.5) * r.width) + 'px';
       p.marker.style.top = (r.top + (p.note.anchor.y || 0.5) * r.height) + 'px';
     });
   }
-  function openTo(note) { panel.classList.add('open'); load(); locate(note); }
+  function openTo(note) { panel.classList.add('rp-open'); load(); locate(note); }
 
   // ---- pin mode ----
   var pinmode = null, pinhl = null, hint = null;
   function enterPinMode() {
     if (pinmode) return;
-    panel.classList.remove('open');
+    panel.classList.remove('rp-open');
     pinmode = el('div', { id: 'rp-pinmode' });
     pinhl = el('div', { id: 'rp-pinhl' });
     hint = el('div', { id: 'rp-hint', html: 'Click an element to pin the note (Esc to cancel)' });
@@ -865,9 +877,9 @@
   }
   function onPinMove(e) {
     var t = targetUnder(e.clientX, e.clientY);
-    if (!t) { pinhl.style.display = 'none'; return; }
+    if (!t) { pinhl.style.setProperty('display', 'none', 'important'); return; }
     var r = t.getBoundingClientRect();
-    pinhl.style.display = 'block';
+    pinhl.style.setProperty('display', 'block', 'important');
     pinhl.style.left = r.left + 'px'; pinhl.style.top = r.top + 'px';
     pinhl.style.width = r.width + 'px'; pinhl.style.height = r.height + 'px';
   }
@@ -882,9 +894,9 @@
       y: r.height ? Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) : 0.5,
     };
     var b = document.getElementById('rp-pin');
-    b.classList.add('set'); b.innerHTML = '&#128205; Pinned';
+    b.classList.add('rp-set'); b.innerHTML = '&#128205; Pinned';
     exitPinMode();
-    panel.classList.add('open');
+    panel.classList.add('rp-open');
     document.getElementById('rp-body').focus();
   }
   function onPinKey(e) { if (e.key === 'Escape') { e.preventDefault(); exitPinMode(); } }
@@ -894,11 +906,11 @@
   // Draw the roaming highlight box around an element (shared by Locate + jump-to-next).
   function showLoc(t) {
     var r = t.getBoundingClientRect();
-    loc.style.display = 'block'; loc.style.opacity = '1';
+    loc.style.setProperty('display', 'block', 'important'); loc.style.opacity = '1';
     loc.style.left = (r.left - 4) + 'px'; loc.style.top = (r.top - 4) + 'px';
     loc.style.width = (r.width + 8) + 'px'; loc.style.height = (r.height + 8) + 'px';
     clearTimeout(locTimer);
-    locTimer = setTimeout(function () { loc.style.opacity = '0'; setTimeout(function () { loc.style.display = 'none'; }, 350); }, 1800);
+    locTimer = setTimeout(function () { loc.style.opacity = '0'; setTimeout(function () { loc.style.setProperty('display', 'none', 'important'); }, 350); }, 1800);
   }
   function locate(note) {
     if (!anchored(note)) return;
