@@ -48,10 +48,12 @@
   // DOM too; namespaced classes cannot block element selectors. Defense:
   // every declaration in this sheet carries !important (the widget wins any
   // property it declares), and the two armor rules below pin the typography/
-  // reset properties the component rules do not declare. :where()/:is() keep
-  // the second rule at element specificity (0,0,1) so every .rp-* rule still
-  // overrides it, while site element rules lose (this sheet is injected after
-  // theirs). Do not add display here - it is toggled from JS/classes.
+  // reset properties the component rules do not declare. The whole sheet
+  // lives one ID tier up: component rules are scoped :is(#roots) .rp-x
+  // (1,1,0) and the second armor rule sits just under them at (1,0,1), so
+  // even attribute-qualified site rules like button[type="submit"]{...
+  // !important} (0,1,1 - out-ranks a bare class) lose to both layers.
+  // Do not add display here - it is toggled from JS/classes.
   // Known residual gap: rem/vh units track the host page's root sizing.
   var css = '\
   #rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important}\
