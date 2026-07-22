@@ -600,7 +600,7 @@
     var s = document.getElementById('rp-hubstatus');
     if (!s) return;
     s.textContent = msg || '';
-    // 'important' or the sheet's !important .rp-help color always wins and the state colors never show
+    // must be set 'important': the sheet's .rp-help color is !important and would eat the state colors
     s.style.setProperty('color', kind === 'err' ? RED : (kind === 'ok' ? '#2e7d32' : '#888'), 'important');
   }
   function defaultProject() { return document.title || location.hostname || 'static-site'; }
