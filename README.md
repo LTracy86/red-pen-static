@@ -76,4 +76,3 @@ JSON export / import. (Ported from the Express widget; localStorage backend.)
 Red Pen is free and open. If it saves you time, you can back the next release.
 
 - [Buy Me a Coffee](https://www.buymeacoffee.com/lincolntracy)
-- [GitHub Sponsors](https://github.com/sponsors/LTracy86)
