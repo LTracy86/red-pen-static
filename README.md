@@ -45,7 +45,11 @@ Open `example/index.html` in a browser (or serve the folder) and use the red but
 
 - Key: `localStorage["redpen.notes.v1"]` - an array of notes (id, body, type,
   priority, status, url, page, anchor, createdAt).
-- Theme (`redpenTheme`) and panel width (`redpenWidth`) are stored too.
+- Preferences: theme (`redpenTheme`), panel width (`redpenWidth`), remembered
+  add-form type/priority (`redpen.addPrefs`), custom note types
+  (`redpen.customTypes`), custom pin colour (`redpen.pinColor`).
+- Hub connection (if you use it): `redpen.hub.url`, `redpen.hub.token`,
+  `redpen.hub.project`.
 - Notes are scoped per page by `location.pathname`; the All-notes board shows every page.
 
 ## Status
