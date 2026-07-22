@@ -57,7 +57,7 @@
   // Known residual gap: rem/vh units track the host page's root sizing.
   var css = '\
   #rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important}\
-  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) :is(a,button,select,textarea,input,label,p,span,div,ul,ol,li,img,svg,h1,h2,h3,h4,h5,h6){transform:none!important;font-family:inherit!important;font-size:inherit!important;font-weight:inherit!important;font-style:inherit!important;line-height:inherit!important;color:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;text-shadow:none!important;text-decoration:none!important;box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;float:none!important;list-style:none!important}\
+  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) :is(a,button,select,textarea,input,label,form,p,span,div,ul,ol,li,img,svg,h1,h2,h3,h4,h5,h6){transform:none!important;font-family:inherit!important;font-size:inherit!important;font-weight:inherit!important;font-style:inherit!important;line-height:inherit!important;color:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;text-shadow:none!important;text-decoration:none!important;box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;float:none!important;list-style:none!important}\
   #rp-fab{position:fixed!important;right:20px!important;bottom:20px!important;z-index:2147483000!important;width:46px!important;height:46px!important;border-radius:50%!important;border:none!important;background:' + RED + '!important;color:#fff!important;font-size:20px!important;cursor:pointer!important;box-shadow:0 4px 14px rgba(211,47,47,.45)!important;display:flex!important;align-items:center!important;justify-content:center!important}\
   #rp-fab:hover{background:#b71c1c!important}\
   #rp-fab #rp-badge{position:absolute!important;top:-4px!important;right:-4px!important;min-width:18px!important;height:18px!important;padding:0 4px!important;border-radius:9px!important;background:#fff!important;color:' + RED + '!important;font:700 11px/18px sans-serif!important;text-align:center!important;box-shadow:0 1px 3px rgba(0,0,0,.3)!important}\
@@ -600,7 +600,8 @@
     var s = document.getElementById('rp-hubstatus');
     if (!s) return;
     s.textContent = msg || '';
-    s.style.color = kind === 'err' ? RED : (kind === 'ok' ? '#2e7d32' : '#888');
+    // 'important' or the sheet's !important .rp-help color always wins and the state colors never show
+    s.style.setProperty('color', kind === 'err' ? RED : (kind === 'ok' ? '#2e7d32' : '#888'), 'important');
   }
   function defaultProject() { return document.title || location.hostname || 'static-site'; }
   function maybeAutoPush() { var c = hubCfg(); if (c.url && c.token) pushToHub({ silent: true }); }
