@@ -67,7 +67,12 @@
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-head .rp-nib{width:14px!important;height:14px!important;flex:none!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-head .rp-repo{margin-left:auto!important;color:#fff!important;font-size:12px!important;font-weight:500!important;text-decoration:underline!important;cursor:pointer!important;background:none!important;border:none!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-close{background:none!important;border:none!important;color:#fff!important;font-size:18px!important;cursor:pointer!important;line-height:1!important;padding:0 .1rem!important}\
-  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-list{flex:1!important;overflow-y:auto!important;padding:.5rem .6rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
+  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-list{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:.5rem .6rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
+  /* Anti-squish: every non-scrolling child of a flex column (panel, all-notes card,\
+     and the note lists themselves) must not shrink. Without flex:none the browser\
+     compresses them past their content height once the list overflows the panel\
+     max-height, and the note action rows collapse under each other. */\
+  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) :is(.rp-head,.rp-add,.rp-box,.rp-allhead,.rp-alltabs,.rp-allfilters,.rp-bulkbar,.rp-note,.rp-allnote,.rp-empty){flex:none!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-empty{color:#888!important;text-align:center!important;padding:1rem 0!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-note{border:1px solid #e6e9ec!important;border-left:3px solid ' + RED + '!important;border-radius:5px!important;padding:.4rem .5rem!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-note.rp-resolved{opacity:.6!important;border-left-color:#9aa0a6!important}\
