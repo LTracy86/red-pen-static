@@ -174,7 +174,7 @@
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-allnote .rp-allcb{margin-right:.4rem!important}\
   #rp-allmodal.rp-dark .rp-allfilters input,#rp-allmodal.rp-dark .rp-allfilters select,#rp-allmodal.rp-dark .rp-bulkbar select,#rp-allmodal.rp-dark .rp-bulkbar button{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
   #rp-allmodal.rp-dark .rp-bulkbar{color:#9aa0a6!important}\
-  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-alllist{flex:1!important;overflow-y:auto!important;padding:.5rem .8rem .8rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
+  :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-alllist{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:.5rem .8rem .8rem!important;display:flex!important;flex-direction:column!important;gap:.45rem!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-allnote{border:1px solid #e6e9ec!important;border-left:3px solid ' + RED + '!important;border-radius:5px!important;padding:.4rem .55rem!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-allnote.rp-resolved{opacity:.6!important;border-left-color:#9aa0a6!important}\
   :is(#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal) .rp-allnote.rp-progress{border-left-color:' + AMBER + '!important}\
