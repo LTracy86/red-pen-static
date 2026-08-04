@@ -766,7 +766,7 @@
       typeLabel: typeLabel(n.type),
       typeColor: typeColor(n.type),
       priority: n.priority,
-      status: statusKey(n),
+      status: statusWire(n),
       statusAt: n.statusAt || null,
       resolvedAt: n.resolvedAt || null,
       author: n.author || '',
