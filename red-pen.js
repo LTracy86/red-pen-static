@@ -18,6 +18,7 @@
   var PREFS_KEY = 'redpen.addPrefs';       // remembered type/priority for the add form
   var CUSTOM_TYPES_KEY = 'redpen.customTypes'; // raw "Label|#hex" lines (user-defined note types)
   var PIN_COLOR_KEY = 'redpen.pinColor';   // custom hex for the numbered pins ('' = app red)
+  var AUTHOR_KEY = 'redpen.author';        // display name stamped on notes + replies
   var RED = '#D32F2F';
   var AMBER = '#E8A100';                    // In Progress accent (mirrors the WP plugin)
   var HEX_RE = /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/;
@@ -41,6 +42,21 @@
   function typeLabel(t) { var c = customTypes(); return (c[t] && c[t].label) || TYPES[t] || 'Note'; }
   function typeColor(t) { var c = customTypes(); return (c[t] && c[t].color) || ''; }
   function pinColor() { var v = ''; try { v = (localStorage.getItem(PIN_COLOR_KEY) || '').trim(); } catch (e) {} return HEX_RE.test(v) ? v : ''; }
+  // There are no accounts here, so identity is one name the user sets once and
+  // this browser stamps on everything it writes. It is the whole difference
+  // between a private scratchpad and a page two people can review together.
+  function authorName() { var v = ''; try { v = (localStorage.getItem(AUTHOR_KEY) || '').trim(); } catch (e) {} return v.slice(0, 60); }
+  // Every status change goes through here: `statusAt` is the cross-surface
+  // contract field the Hub's conflict resolver compares against its own override
+  // timestamp. Without it one stale board-side click keeps force-reverting every
+  // later change made on this page.
+  function stampStatus(n, status, resolvedAt) {
+    n.status = status;
+    n.statusAt = new Date().toISOString();
+    if (status === 'resolved') { if (!n.resolvedAt) { n.resolvedAt = resolvedAt || new Date().toISOString(); } }
+    else { delete n.resolvedAt; }
+    return n;
+  }
 
   // ---- styles ----
   // Host-page armor: the widget lives inside the host page, so site rules that
@@ -213,6 +229,7 @@
       '<button class="rp-repo" id="rp-repo" title="All notes across pages">All notes</button>' +
       '<button class="rp-theme" id="rp-theme" title="Toggle dark mode">&#9789;</button>' +
       '<button class="rp-close" title="Close">&times;</button></div>' +
+    '<div class="rp-orphanbar" id="rp-orphanbar"></div>' +
     '<div class="rp-list" id="rp-list"></div>' +
     '<div class="rp-add">' +
       '<div class="rp-editbar" id="rp-editbar"><span>Editing note</span><button type="button" id="rp-editcancel">Cancel</button></div>' +
@@ -238,6 +255,8 @@
         '<button class="rp-x" id="rp-allclose" title="Close">&times;</button></div>' +
       '<div id="rp-setbox" class="rp-box" style="display:none">' +
         '<div class="rp-b">Settings</div>' +
+        '<label class="rp-lbl">Your name <span class="rp-help">stamped on notes and replies you add from this browser, so a second person can tell them apart</span>' +
+          '<input type="text" id="rp-authorname" placeholder="e.g. Lincoln" class="rp-field"></label>' +
         '<label class="rp-lbl">Custom note types <span class="rp-help">one per line: "Label" or "Label|#hexcolor"</span>' +
           '<textarea id="rp-customtypes" rows="3" placeholder="Design nit|#9C27B0&#10;Content|#2E7D32" class="rp-field rp-mono"></textarea></label>' +
         '<label class="rp-lblrow"><input type="checkbox" id="rp-pincustom"> Custom pin colour <input type="color" id="rp-pincolor" value="' + RED + '"></label>' +
@@ -375,16 +394,72 @@
   function loadAll() {
     try { var a = JSON.parse(localStorage.getItem(STORE_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; }
   }
+  // Returns true when the write landed. A full localStorage used to throw
+  // QuotaExceededError straight into an empty catch, so the note vanished with
+  // no warning at all. Callers must check the result before clearing an input:
+  // in-memory state cannot be allowed to diverge from what was persisted, so
+  // every mutation path re-reads the store via load() and reverts to disk truth.
   function saveAll(arr) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); } catch (e) {}
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(arr));
+      return true;
+    } catch (e) {
+      var name = (e && e.name) || '';
+      var code = e && e.code;
+      var full = name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                 code === 22 || code === 1014;
+      toast(
+        full ? 'Storage is full - that change was NOT saved. Export your notes, then delete some.'
+             : 'Could not save notes (' + (name || 'storage error') + '). That change was NOT saved.',
+        'Export', exportNotes
+      );
+      return false;
+    }
   }
   function uid() { return 'n_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function byId(arr, id) { for (var i = 0; i < arr.length; i++) { if (arr[i].id === id) return arr[i]; } return null; }
 
   function load() {
     notes = loadAll().filter(function (n) { return n.page === PAGE; });
+    computeOrphans();      // before render() so the first paint already knows
     render();
     buildPins();
+  }
+  // ---- orphaned pins ----
+  // positionPins() has always known when an anchor stopped resolving; it hid the
+  // pin and dropped the finding on the floor, so the note stayed in the store
+  // with no way to see that it had come unstuck. Nothing is deleted - the note is
+  // flagged and can be filtered to, which is the only safe response: a selector
+  // can stop resolving because the element genuinely went away OR because this
+  // render simply has not produced it yet.
+  var orphanIds = {};        // id -> true, for THIS page only
+  var showOrphansOnly = false;
+  function anchorResolves(n) {
+    try { return !!document.querySelector(n.anchor.sel); } catch (e) { return false; }
+  }
+  function computeOrphans() {
+    var next = {}, changed = false, k;
+    notes.forEach(function (n) {
+      if (!anchored(n) || statusKey(n) === 'resolved') return;
+      if (!anchorResolves(n)) next[n.id] = true;
+    });
+    for (k in next) { if (next.hasOwnProperty(k) && !orphanIds[k]) changed = true; }
+    for (k in orphanIds) { if (orphanIds.hasOwnProperty(k) && !next[k]) changed = true; }
+    orphanIds = next;
+    return changed;
+  }
+  function orphanCount() { var c = 0, k; for (k in orphanIds) { if (orphanIds.hasOwnProperty(k)) c++; } return c; }
+  function renderOrphanBar() {
+    var bar = document.getElementById('rp-orphanbar');
+    if (!bar) return;
+    var lost = orphanCount();
+    if (!lost) { showOrphansOnly = false; bar.classList.remove('rp-on'); bar.innerHTML = ''; return; }
+    bar.classList.add('rp-on');
+    bar.innerHTML = '<span>' + lost + (lost === 1 ? ' note has' : ' notes have') +
+      ' lost the element it was pinned to.</span><span class="rp-grow"></span>' +
+      '<button type="button" id="rp-orphantoggle">' + (showOrphansOnly ? 'Show all' : 'Show them') + '</button>';
+    var b = document.getElementById('rp-orphantoggle');
+    if (b) b.addEventListener('click', function () { showOrphansOnly = !showOrphansOnly; render(); });
   }
   function add() {
     var body = document.getElementById('rp-body').value.trim();
@@ -392,13 +467,14 @@
     var type = document.getElementById('rp-type').value;
     var priority = document.getElementById('rp-prio').value;
     var all = loadAll();
+    var now = new Date().toISOString();
     if (editingId) {
       var n = byId(all, editingId);
       if (n) {
         n.body = body; n.type = type; n.priority = priority;
         n.anchor = pendingAnchor;              // preserved on edit-enter; Pin can replace/clear it
-        n.updatedAt = new Date().toISOString();
-        saveAll(all);
+        n.updatedAt = now;
+        if (!saveAll(all)) return;             // keep the form as-is so the edit is not lost
       }
       exitEdit();
     } else {
@@ -408,12 +484,16 @@
         type: type,
         priority: priority,
         status: 'open',
+        statusAt: now,
+        author: authorName(),
         url: location.href,
         page: PAGE,
         anchor: pendingAnchor,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
       });
-      saveAll(all);
+      // A failed write must leave the textarea and the pending pin alone -
+      // clearing them would throw away the note the user just wrote.
+      if (!saveAll(all)) return;
       document.getElementById('rp-body').value = '';
       clearPending();
     }
@@ -425,12 +505,9 @@
     var all = loadAll(); var n = byId(all, id);
     var prev = n ? statusKey(n) : null;
     if (n) {
-      n.status = status;
-      // Stamp a resolved timestamp so the Hub board can show/sort when this note was
-      // closed (matches the WordPress + Hub surfaces); clear it on reopen.
-      if (status === 'resolved') { if (!n.resolvedAt) { n.resolvedAt = new Date().toISOString(); } }
-      else { delete n.resolvedAt; }
-      saveAll(all);
+      // stampStatus sets status, statusAt and resolvedAt together - see its comment.
+      stampStatus(n, status);
+      if (!saveAll(all)) { load(); return; }   // re-read so the UI shows what is actually stored
     }
     load(); if (allModal.classList.contains('rp-open')) renderAll();
     maybeAutoPush();
@@ -492,6 +569,7 @@
     box.style.display = show ? 'flex' : 'none';
     if (show) {
       try { document.getElementById('rp-customtypes').value = localStorage.getItem(CUSTOM_TYPES_KEY) || ''; } catch (e) {}
+      document.getElementById('rp-authorname').value = authorName();
       var pc = pinColor();
       document.getElementById('rp-pincustom').checked = !!pc;
       document.getElementById('rp-pincolor').value = pc || RED;
@@ -500,6 +578,7 @@
   function saveSettings() {
     try {
       localStorage.setItem(CUSTOM_TYPES_KEY, document.getElementById('rp-customtypes').value);
+      localStorage.setItem(AUTHOR_KEY, document.getElementById('rp-authorname').value.trim().slice(0, 60));
       var custom = document.getElementById('rp-pincustom').checked;
       var col = document.getElementById('rp-pincolor').value;
       localStorage.setItem(PIN_COLOR_KEY, (custom && HEX_RE.test(col)) ? col : '');
@@ -535,8 +614,8 @@
     var all = loadAll(); var n = byId(all, id);
     if (!n) return;
     if (!n.replies) n.replies = [];
-    n.replies.push({ id: uid(), body: text, createdAt: new Date().toISOString() });
-    saveAll(all);
+    n.replies.push({ id: uid(), body: text, author: authorName(), createdAt: new Date().toISOString() });
+    if (!saveAll(all)) return;                 // leave the reply box filled so the text survives
     load(); if (allModal.classList.contains('rp-open')) renderAll();
     // Replies aren't part of the Hub payload (mirrors the WP push), so no auto-push here.
   }
@@ -619,6 +698,30 @@
     s.style.setProperty('color', kind === 'err' ? RED : (kind === 'ok' ? '#2e7d32' : '#888'), 'important');
   }
   function defaultProject() { return document.title || location.hostname || 'static-site'; }
+  // The one place a note is flattened for the wire. Every field the Hub reads is
+  // listed here exactly once, so a new field cannot land in one code path and be
+  // missing from another. `typeLabel` carries custom type names the Hub has no
+  // map for; `statusAt` is what stops the Hub's resolver reverting our changes;
+  // `author` is blank until the user sets a name in Settings, never faked.
+  function hubRecord(n) {
+    return {
+      id: n.id,
+      body: n.body,
+      type: n.type,
+      typeLabel: typeLabel(n.type),
+      typeColor: typeColor(n.type),
+      priority: n.priority,
+      status: statusKey(n),
+      statusAt: n.statusAt || null,
+      resolvedAt: n.resolvedAt || null,
+      author: n.author || '',
+      url: n.url || location.href,
+      page: n.page,
+      anchor: (n.anchor && n.anchor.sel) ? n.anchor.sel : '',
+      replyCount: (n.replies && n.replies.length) || 0,
+      createdAt: n.createdAt
+    };
+  }
   function maybeAutoPush() { var c = hubCfg(); if (c.url && c.token) pushToHub({ silent: true }); }
   // Two-way sync: apply status changes the Hub made to our notes (resolve/reopen/start on
   // the board). Writes straight to the store + re-renders; deliberately does NOT re-push,
@@ -630,9 +733,7 @@
       var n = byId(all, id); if (!n) { return; }
       var to = changes[id] && changes[id].status;
       if (!to || n.status === to) { return; }
-      n.status = to;
-      if (to === 'resolved') { if (changes[id].resolvedAt) { n.resolvedAt = changes[id].resolvedAt; } }
-      else if (n.resolvedAt) { delete n.resolvedAt; }
+      stampStatus(n, to, changes[id].resolvedAt);
       applied++;
     });
     if (applied) { saveAll(all); load(); if (allModal.classList.contains('rp-open')) { renderAll(); } }
@@ -645,14 +746,7 @@
     // Mirror the WP plugin's fix: a missing scheme makes the request fail silently, so default to http://.
     var url = c.url.replace(/^(?!https?:\/\/)/i, 'http://').replace(/\/+$/, '');
     var project = c.project || defaultProject();
-    var notes = loadAll().map(function (n) {
-      return {
-        id: n.id, body: n.body, type: n.type, priority: n.priority, status: n.status,
-        url: n.url || location.href, page: n.page,
-        anchor: (n.anchor && n.anchor.sel) ? n.anchor.sel : '',
-        createdAt: n.createdAt, resolvedAt: n.resolvedAt || null
-      };
-    });
+    var notes = loadAll().map(hubRecord);
     if (!opts.silent) hubStatus('Syncing...', '');
     if (typeof fetch !== 'function') { if (!opts.silent) hubStatus('This browser cannot push (no fetch).', 'err'); return; }
     fetch(url + '/api/ingest', {
@@ -689,7 +783,8 @@
   function repliesHtml(n) {
     var out = '<div class="rp-replies">';
     (n.replies || []).forEach(function (r) {
-      out += '<div class="rp-reply"><div class="rp-reply-meta">' + esc(when(r.createdAt)) + '</div>' +
+      out += '<div class="rp-reply"><div class="rp-reply-meta">' +
+        (r.author ? esc(r.author) + ' &middot; ' : '') + esc(when(r.createdAt)) + '</div>' +
         '<div class="rp-reply-body">' + esc(r.body) + '</div></div>';
     });
     out += '<form class="rp-replyform"><textarea class="rp-replytext" rows="1" placeholder="Reply..."></textarea>' +
@@ -723,22 +818,28 @@
     badge.textContent = open.length;
     badge.style.display = open.length ? 'block' : 'none';
 
+    renderOrphanBar();
     var list = document.getElementById('rp-list');
     if (!notes.length) { list.innerHTML = '<div class="rp-empty">No notes on this page yet.</div>'; return; }
     var sorted = notes.slice().sort(function (a, b) {
       if ((a.status === 'resolved') !== (b.status === 'resolved')) return a.status === 'resolved' ? 1 : -1;
       return String(b.createdAt).localeCompare(String(a.createdAt));
     });
+    if (showOrphansOnly) sorted = sorted.filter(function (n) { return orphanIds[n.id]; });
+    if (!sorted.length) { list.innerHTML = '<div class="rp-empty">No notes to show.</div>'; return; }
     var pinNums = pinNumbers();
     list.innerHTML = '';
     sorted.forEach(function (n) {
       var num = pinNums[n.id];
-      var d = el('div', { cls: 'rp-note rp-' + statusKey(n) });
+      var lost = !!orphanIds[n.id];
+      var d = el('div', { cls: 'rp-note rp-' + statusKey(n) + (lost ? ' rp-lost' : '') });
       d.innerHTML =
         '<div class="rp-meta">' +
           (num ? '<span class="rp-num">' + num + '</span>' : '') +
           tagHtml(n) +
+          (lost ? '<span class="rp-lostflag" title="' + esc(n.anchor.sel) + '">pin lost</span>' : '') +
           '<span class="rp-prio ' + esc(n.priority) + '">' + esc(n.priority) + '</span>' +
+          (n.author ? '<span class="rp-author">' + esc(n.author) + '</span>' : '') +
           '<span class="rp-when">' + esc(when(n.createdAt)) + '</span>' +
         '</div>' +
         '<div class="rp-body">' + esc(n.body) + '</div>' +
@@ -780,9 +881,9 @@
       var set = {}; ids.forEach(function (id) { set[id] = true; });
       all = all.filter(function (n) { return !set[n.id]; });
     } else {
-      ids.forEach(function (id) { var n = byId(all, id); if (n) n.status = action; });
+      ids.forEach(function (id) { var n = byId(all, id); if (n) stampStatus(n, action); });
     }
-    saveAll(all);
+    if (!saveAll(all)) { load(); renderAll(); return; }
     document.getElementById('rp-bulk').value = '';
     load(); renderAll(); maybeAutoPush();
   }
@@ -803,12 +904,18 @@
     }
     list.innerHTML = '';
     rows.forEach(function (n) {
-      var d = el('div', { cls: 'rp-allnote rp-' + statusKey(n) });
+      // Orphan state is only knowable for the page currently in the DOM - a
+      // selector for another page cannot be resolved from here, so those rows
+      // are left unflagged rather than guessed at.
+      var lost = n.page === PAGE && !!orphanIds[n.id];
+      var d = el('div', { cls: 'rp-allnote rp-' + statusKey(n) + (lost ? ' rp-lost' : '') });
       d.innerHTML =
         '<div class="rp-meta">' +
           '<input type="checkbox" class="rp-allcb" data-id="' + esc(n.id) + '">' +
           tagHtml(n) +
+          (lost ? '<span class="rp-lostflag" title="' + esc(n.anchor.sel) + '">pin lost</span>' : '') +
           '<span class="rp-prio ' + esc(n.priority) + '">' + esc(n.priority) + '</span>' +
+          (n.author ? '<span class="rp-author">' + esc(n.author) + '</span>' : '') +
           '<span class="rp-when">' + esc(when(n.createdAt)) + '</span>' +
         '</div>' +
         '<div class="rp-body">' + esc(n.body) + '</div>' +
@@ -850,32 +957,50 @@
     positionPins();
   }
   function positionPins() {
+    var lostNow = false;
     pins.forEach(function (p) {
       var target;
       try { target = document.querySelector(p.note.anchor.sel); } catch (e) { target = null; }
-      if (!target) { p.marker.style.setProperty('display', 'none', 'important'); return; }
+      if (!target) { p.marker.style.setProperty('display', 'none', 'important'); lostNow = true; return; }
       var r = target.getBoundingClientRect();
       p.marker.style.setProperty('display', 'flex', 'important');
       p.marker.style.left = (r.left + (p.note.anchor.x || 0.5) * r.width) + 'px';
       p.marker.style.top = (r.top + (p.note.anchor.y || 0.5) * r.height) + 'px';
     });
+    // A hidden pin is a finding, not a shrug: re-check and repaint the list so the
+    // orphan bar appears (or clears) the moment the DOM changes under us.
+    if ((lostNow || orphanCount()) && computeOrphans()) render();
   }
   function openTo(note) { panel.classList.add('rp-open'); load(); locate(note); }
 
   // ---- pin mode ----
   var pinmode = null, pinhl = null, hint = null;
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   function enterPinMode() {
     if (pinmode) return;
     panel.classList.remove('rp-open');
     pinmode = el('div', { id: 'rp-pinmode' });
     pinhl = el('div', { id: 'rp-pinhl' });
-    hint = el('div', { id: 'rp-hint', html: 'Click an element to pin the note (Esc to cancel)' });
+    hint = el('div', {
+      id: 'rp-hint',
+      html: isTouch ? 'Tap an element to pin the note. Drag to scroll, tap the hint to cancel.'
+                    : 'Click an element to pin the note (Esc to cancel)'
+    });
     document.body.appendChild(pinmode);
     document.body.appendChild(pinhl);
     document.body.appendChild(hint);
     document.addEventListener('mousemove', onPinMove, true);
     document.addEventListener('click', onPinClick, true);
     document.addEventListener('keydown', onPinKey, true);
+    if (isTouch) {
+      // There is no Esc on a phone, so the hint doubles as the cancel target.
+      hint.style.setProperty('pointer-events', 'auto', 'important');
+      hint.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); exitPinMode(); }, true);
+      pinmode.addEventListener('touchstart', onPinTouchStart, { passive: true });
+      pinmode.addEventListener('touchmove', onPinTouchMove, { passive: true });
+      pinmode.addEventListener('touchend', onPinTouchEnd, false);
+      pinmode.addEventListener('touchcancel', function () { touchStart = null; }, { passive: true });
+    }
   }
   function exitPinMode() {
     if (!pinmode) return;
