@@ -56,7 +56,17 @@
   <img src="img/st-allnotes.png" alt="">
   <figcaption>The All-notes board with tabs, filters and the bulk bar.</figcaption>
 </figure>
-<p>The board's header also holds <b>Settings</b> (custom note types, custom pin color), the dark-mode toggle, and <b>Export / Import</b>.</p>
+<p>The board's header also holds <b>Settings</b> (custom note types, custom pin color, and <b>Your name</b>), the dark-mode toggle, and <b>Export / Import</b>.</p>
+
+<h2>Signing your notes</h2>
+<p>There are no accounts here, so you set a display name once - Settings on the All-notes board - and this browser stamps it on every note and reply it writes from then on. It is blank until you set it and never guessed at, so a note with no name is simply a note written before anyone set one. The point is a second person: hand the site to a colleague, both of you set a name, and the panel says who wrote what.</p>
+
+<h2>On a phone</h2>
+<p>Below 600px the panel becomes a bottom sheet - full width, anchored to the bottom edge, and clear of the iOS home indicator - and the All-notes board becomes a sheet too. Tap targets grow, and every input is floored at 16px so iOS stops zooming the page when a field takes focus.</p>
+<p>Pinning works by touch: a tap pins, a drag scrolls. The page pans normally while pin mode is on, and a touch only counts as a pin if your finger barely moved. There is no Esc key on a phone, so the on-screen hint doubles as the cancel target.</p>
+
+<h2>When a pin loses its element</h2>
+<p>If the element a note was pinned to stops resolving, the note is not hidden. A bar at the top of the panel counts how many notes have lost their pin, the notes themselves are flagged, and <b>Show them</b> filters the list down to exactly those. Nothing is deleted: a selector can stop resolving because the element was removed, or because this render has not produced it yet.</p>
 
 <h2>Where your notes live - read this one</h2>
 <div class="callout">
