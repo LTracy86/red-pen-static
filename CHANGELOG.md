@@ -6,7 +6,7 @@ All notable changes to Red Pen (static). Versions track `package.json`.
 Entries for 0.0.13 and 0.0.14 were never written at the time; they are
 reconstructed here from the commits that shipped them, not invented.
 
-## Unreleased
+## 0.1.1 - 2026-08-04
 
 ### Fixed
 
