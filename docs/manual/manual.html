@@ -73,6 +73,7 @@
   <b>Notes live in this browser, on this machine, for this site.</b>
   The store is the browser's localStorage. Clearing site data deletes your notes, and a different browser or computer won't see them. <b>Export regularly</b>: the Export button downloads all notes as a JSON file you can back up, hand to a teammate, or Import on another machine. If you want notes that live outside the browser, that is exactly what the Hub connection or the Express middleware are for.
 </div>
+<p>localStorage has a size limit, and a page with a lot of notes can reach it. If a write does not fit, Red Pen says so and offers Export rather than swallowing the failure - the note you typed and the pin you placed are left where they are, so nothing is lost while you export and clear some room.</p>
 
 <h2>Push to the Red Pen Hub (optional)</h2>
 <p>If you run the free Red Pen Hub, the <b>Hub</b> button on the All-notes board takes a Hub URL, connect token, and project name. Save and the site's notes push to your Hub board and pull status changes back - resolve on either side and the other follows. This also rescues notes out of browser storage into something permanent.</p>
