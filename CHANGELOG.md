@@ -6,6 +6,18 @@ All notable changes to Red Pen (static). Versions track `package.json`.
 Entries for 0.0.13 and 0.0.14 were never written at the time; they are
 reconstructed here from the commits that shipped them, not invented.
 
+## Unreleased
+
+### Fixed
+
+- **An imported in-progress note was silently downgraded to open.** `statusKey()`
+  coerced anything that was not `resolved` or `progress` to `open`, so a note
+  carrying the family spec's `in_progress` - which the Express surface now writes
+  and the Hub understands - lost its middle state on import, with no warning.
+  Every spelling (`progress`, `in_progress`, `in-progress`) is now accepted on the
+  way in. Anything leaving this surface uses the spec's `in_progress`; internal
+  state stays `progress`, and the Hub's `progress` write-back still reads cleanly.
+
 ## 0.1.0 - 2026-08-04
 
 The release that makes the widget usable on a phone and safe to share with a
