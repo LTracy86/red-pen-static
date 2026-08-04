@@ -79,10 +79,18 @@
   // in the door. Keeping it in one place makes the armor a one-line change.
   // ANY new UI added below must be written as `S + '.rp-thing{...}'`, with
   // !important on every declaration - a bare `.rp-thing{}` is not armored.
-  var ROOTS = '#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal';
+  // ROOTS must list EVERY element mounted at the top level. #rp-loc and #rp-pinhl
+  // were mounted but missing from it, so nothing armored them.
+  var ROOTS = '#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal,#rp-loc,#rp-pinhl';
   var S = ':is(' + ROOTS + ') ';
+  // The second armor rule only reaches DESCENDANTS of the roots, so the roots
+  // themselves were exposed: #rp-fab is a <button>, and a host page rule like
+  // button{padding:30px!important} inflated the launcher from 46px to 60px
+  // because #rp-fab declares no padding of its own for it to lose to. The reset
+  // properties below close that. Roots that DO want padding (#rp-toast, #rp-hint)
+  // declare it later in this sheet at equal specificity, so they still win.
   var css = '\
-  ' + ROOTS + '{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important}\
+  ' + ROOTS + '{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important;box-sizing:border-box!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;max-width:none!important;float:none!important;text-decoration:none!important;list-style:none!important}\
   ' + S + ':is(a,button,select,textarea,input,label,form,p,span,div,ul,ol,li,img,svg,h1,h2,h3,h4,h5,h6){transform:none!important;font-family:inherit!important;font-size:inherit!important;font-weight:inherit!important;font-style:inherit!important;line-height:inherit!important;color:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;text-shadow:none!important;text-decoration:none!important;box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;float:none!important;list-style:none!important}\
   #rp-fab{position:fixed!important;right:20px!important;bottom:20px!important;z-index:2147483000!important;width:46px!important;height:46px!important;border-radius:50%!important;border:none!important;background:' + RED + '!important;color:#fff!important;font-size:20px!important;cursor:pointer!important;box-shadow:0 4px 14px rgba(211,47,47,.45)!important;display:flex!important;align-items:center!important;justify-content:center!important}\
   #rp-fab:hover{background:#b71c1c!important}\
@@ -214,7 +222,43 @@
   #rp-allmodal.rp-dark #rp-hubbox input{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
   #rp-allmodal.rp-dark #rp-hubsync{background:#3a3f44!important;color:#e6e9ec!important;border-color:#4a4f55!important}\
   #rp-allmodal.rp-dark #rp-setbox{border-bottom-color:#3a3f44!important}\
-  #rp-allmodal.rp-dark #rp-setbox textarea{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}';
+  #rp-allmodal.rp-dark #rp-setbox textarea{background:#1a1d20!important;color:#e6e9ec!important;border-color:#3a3f44!important}\
+  ' + S + '.rp-author{font-weight:600!important;color:#555!important}\
+  #rp-panel.rp-dark .rp-author,#rp-allmodal.rp-dark .rp-author{color:#c3c9ce!important}\
+  ' + S + '.rp-orphanbar{display:none!important;align-items:center!important;gap:.5rem!important;padding:.35rem .6rem!important;font-size:12px!important;background:#fdecea!important;color:#b71c1c!important;border-bottom:1px solid #f3c0c0!important}\
+  ' + S + '.rp-orphanbar.rp-on{display:flex!important}\
+  ' + S + '.rp-orphanbar .rp-grow{flex:1!important}\
+  ' + S + '.rp-orphanbar button{background:none!important;border:none!important;color:#b71c1c!important;font:inherit!important;font-size:12px!important;font-weight:600!important;text-decoration:underline!important;cursor:pointer!important;padding:.1rem .2rem!important;white-space:nowrap!important}\
+  #rp-panel.rp-dark .rp-orphanbar{background:#3a2526!important;border-bottom-color:#6b3a3c!important;color:#ff8a80!important}\
+  #rp-panel.rp-dark .rp-orphanbar button{color:#ff8a80!important}\
+  ' + S + '.rp-note.rp-lost,' + S + '.rp-allnote.rp-lost{border-left-style:dashed!important}\
+  ' + S + '.rp-lostflag{background:#fdecea!important;color:#b71c1c!important;border-radius:3px!important;padding:.02rem .3rem!important;font-size:11px!important;font-weight:600!important}\
+  #rp-panel.rp-dark .rp-lostflag,#rp-allmodal.rp-dark .rp-lostflag{background:#3a2526!important;color:#ff8a80!important}\
+  /* Pin mode has to let a touch drag scroll the page while a tap still pins:\
+     pan-y hands vertical panning back to the browser even though the overlay\
+     is the touch target. Without it the overlay is a scroll trap on a phone. */\
+  #rp-pinmode{touch-action:pan-y!important}\
+  /* Phone layout. The panel was a fixed 344px box at right:20px, which\
+     overflows a 360px viewport, and there was not one media query in the file.\
+     Narrow viewports get a bottom sheet, inputs get a 16px floor (anything\
+     smaller makes iOS zoom the whole page on focus), tap targets grow to ~36px,\
+     and safe-area-inset keeps the sheet clear of the home indicator. */\
+  @media (max-width:600px){\
+    #rp-panel{left:0!important;right:0!important;bottom:0!important;width:auto!important;max-width:none!important;max-height:86vh!important;border-radius:12px 12px 0 0!important;padding-bottom:env(safe-area-inset-bottom)!important}\
+    #rp-fab{right:14px!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;width:52px!important;height:52px!important}\
+    #rp-toast{bottom:calc(84px + env(safe-area-inset-bottom))!important;max-width:92vw!important}\
+    #rp-hint{max-width:92vw!important;text-align:center!important;line-height:1.35!important}\
+    #rp-allmodal{align-items:flex-end!important}\
+    ' + S + '.rp-resize{display:none!important}\
+    ' + S + '.rp-allcard{width:100%!important;max-width:none!important;max-height:92vh!important;border-radius:12px 12px 0 0!important;padding-bottom:env(safe-area-inset-bottom)!important}\
+    ' + S + '.rp-head,' + S + '.rp-allhead{padding:.7rem .8rem!important}\
+    ' + S + '.rp-close,' + S + '.rp-theme,' + S + '.rp-repo,' + S + '.rp-allhead button{min-height:36px!important;padding:.3rem .5rem!important}\
+    ' + S + '.rp-acts button,' + S + '.rp-status,' + S + '.rp-replysend,' + S + '.rp-pinbtn,' + S + '.rp-save,' + S + '.rp-ghostbtn,' + S + '.rp-bulkbar button{min-height:36px!important}\
+    ' + S + '.rp-acts{gap:.6rem!important}\
+    ' + S + '.rp-pin{min-width:28px!important;height:28px!important;border-radius:14px!important;font-size:12px!important}\
+    ' + S + '.rp-add textarea,' + S + '.rp-field,' + S + '.rp-replytext,' + S + '.rp-add select,' + S + '.rp-status,' + S + '.rp-allfilters input,' + S + '.rp-allfilters select,' + S + '.rp-bulkbar select{font-size:16px!important}\
+    ' + S + '.rp-allfilters{flex-wrap:wrap!important}\
+  }';
 
   var style = document.createElement('style');
   style.textContent = css;
@@ -369,11 +413,11 @@
     if (allModal.classList.contains('rp-open')) { allModal.classList.remove('rp-open'); return; }
     if (panel.classList.contains('rp-open')) { if (editingId) exitEdit(); panel.classList.remove('rp-open'); }
   });
-  (function () { // resizable panel
-    try { var w0 = parseInt(localStorage.getItem(WIDTH_KEY), 10); if (w0 >= 300 && w0 <= 900) panel.style.setProperty('width', w0 + 'px', 'important'); } catch (e) {}
+  (function () { // resizable panel (wide viewports only - narrow ones are a bottom sheet)
+    syncPanelWidth();
     var handle = document.getElementById('rp-resize');
     var dragging = false;
-    handle.addEventListener('mousedown', function (e) { dragging = true; e.preventDefault(); document.body.style.userSelect = 'none'; });
+    handle.addEventListener('mousedown', function (e) { if (window.innerWidth <= 600) return; dragging = true; e.preventDefault(); document.body.style.userSelect = 'none'; });
     document.addEventListener('mousemove', function (e) {
       if (!dragging) return;
       var w = (window.innerWidth - 20) - e.clientX;
@@ -1009,6 +1053,36 @@
     document.removeEventListener('keydown', onPinKey, true);
     [pinmode, pinhl, hint].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
     pinmode = pinhl = hint = null;
+    touchStart = null;
+  }
+  // Touch pin mode. The overlay carries touch-action:pan-y, so the browser still
+  // scrolls the page natively while our finger is on the overlay; we only treat
+  // a touch as a pin when it barely moved. That is the whole contract: a tap
+  // pins, a drag scrolls.
+  var touchStart = null;
+  var TAP_SLOP = 10;   // px of movement still counted as a tap, not a drag
+  function onPinTouchStart(e) {
+    var t = e.touches && e.touches[0];
+    if (!t) return;
+    touchStart = { x: t.clientX, y: t.clientY, moved: false };
+    highlightAt(t.clientX, t.clientY);
+  }
+  function onPinTouchMove(e) {
+    var t = e.touches && e.touches[0];
+    if (!t || !touchStart) return;
+    if (Math.abs(t.clientX - touchStart.x) > TAP_SLOP || Math.abs(t.clientY - touchStart.y) > TAP_SLOP) {
+      touchStart.moved = true;
+      if (pinhl) pinhl.style.setProperty('display', 'none', 'important');
+    } else {
+      highlightAt(t.clientX, t.clientY);
+    }
+  }
+  function onPinTouchEnd(e) {
+    var s = touchStart;
+    touchStart = null;
+    if (!s || s.moved) return;              // a drag: the page scrolled, nothing to pin
+    e.preventDefault();                     // and suppress the synthetic click
+    pinAt(s.x, s.y);
   }
   function targetUnder(x, y) {
     pinmode.style.display = 'none';
@@ -1018,29 +1092,35 @@
     if (fab.contains(t) || panel.contains(t) || pinLayer.contains(t)) return null;
     return t;
   }
-  function onPinMove(e) {
-    var t = targetUnder(e.clientX, e.clientY);
+  // Shared by the mouse and touch paths so the two can never drift apart.
+  function highlightAt(x, y) {
+    if (!pinhl) return;
+    var t = targetUnder(x, y);
     if (!t) { pinhl.style.setProperty('display', 'none', 'important'); return; }
     var r = t.getBoundingClientRect();
     pinhl.style.setProperty('display', 'block', 'important');
     pinhl.style.left = r.left + 'px'; pinhl.style.top = r.top + 'px';
     pinhl.style.width = r.width + 'px'; pinhl.style.height = r.height + 'px';
   }
-  function onPinClick(e) {
-    var t = targetUnder(e.clientX, e.clientY);
-    e.preventDefault(); e.stopPropagation();
+  function pinAt(x, y) {
+    var t = targetUnder(x, y);
     if (!t) { exitPinMode(); return; }
     var r = t.getBoundingClientRect();
     pendingAnchor = {
       sel: cssPath(t),
-      x: r.width ? Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) : 0.5,
-      y: r.height ? Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) : 0.5,
+      x: r.width ? Math.min(1, Math.max(0, (x - r.left) / r.width)) : 0.5,
+      y: r.height ? Math.min(1, Math.max(0, (y - r.top) / r.height)) : 0.5,
     };
     var b = document.getElementById('rp-pin');
     b.classList.add('rp-set'); b.innerHTML = '&#128205; Pinned';
     exitPinMode();
     panel.classList.add('rp-open');
     document.getElementById('rp-body').focus();
+  }
+  function onPinMove(e) { highlightAt(e.clientX, e.clientY); }
+  function onPinClick(e) {
+    e.preventDefault(); e.stopPropagation();
+    pinAt(e.clientX, e.clientY);
   }
   function onPinKey(e) { if (e.key === 'Escape') { e.preventDefault(); exitPinMode(); } }
 
@@ -1088,7 +1168,48 @@
   var raf = null;
   function onScrollResize() { if (raf) return; raf = requestAnimationFrame(function () { raf = null; positionPins(); }); }
   window.addEventListener('scroll', onScrollResize, true);
-  window.addEventListener('resize', onScrollResize);
+  window.addEventListener('resize', function () { syncPanelWidth(); onScrollResize(); });
+
+  // ---- keep pins honest when the DOM moves under them ----
+  // Scroll and resize were the only triggers, so an SPA route change, a lazy
+  // image, an accordion - anything that re-renders - left every pin frozen at a
+  // stale coordinate. Guards, because this runs on somebody else's busy page:
+  // mutations inside our own widget are ignored (repainting the note list would
+  // otherwise re-trigger us forever), and the callback is debounced so a chatty
+  // page costs one reposition per frame-ish window, not one per mutation.
+  function isOurs(node) {
+    for (var p = node; p; p = p.parentNode) {
+      if (p === fab || p === panel || p === pinLayer || p === loc || p === allModal || (toastEl && p === toastEl)) return true;
+    }
+    return false;
+  }
+  if (typeof MutationObserver === 'function') {
+    var moTimer = null;
+    var mo = new MutationObserver(function (records) {
+      var relevant = false;
+      for (var i = 0; i < records.length; i++) {
+        if (!isOurs(records[i].target)) { relevant = true; break; }
+      }
+      if (!relevant || moTimer) return;
+      moTimer = setTimeout(function () { moTimer = null; positionPins(); }, 150);
+    });
+    try {
+      mo.observe(document.body, {
+        childList: true, subtree: true,
+        attributes: true, attributeFilter: ['class', 'style', 'id', 'hidden']
+      });
+    } catch (e) {}
+  }
+
+  // The saved panel width is an inline !important style, which would beat the
+  // narrow-viewport media query and leave a 344px+ box hanging off a phone
+  // screen. Apply it only when there is room for it.
+  function syncPanelWidth() {
+    if (window.innerWidth <= 600) { panel.style.removeProperty('width'); return; }
+    var w0 = NaN;
+    try { w0 = parseInt(localStorage.getItem(WIDTH_KEY), 10); } catch (e) {}
+    if (w0 >= 300 && w0 <= 900) panel.style.setProperty('width', w0 + 'px', 'important');
+  }
 
   // ---- helpers ----
   function cssPath(node) {
