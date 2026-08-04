@@ -44,15 +44,49 @@ Open `example/index.html` in a browser (or serve the folder) and use the red but
 ## Storage
 
 - Key: `localStorage["redpen.notes.v1"]` - an array of notes (id, body, type,
-  priority, status, url, page, anchor, createdAt).
+  priority, status, statusAt, resolvedAt, author, url, page, anchor, replies,
+  createdAt).
 - Preferences: theme (`redpenTheme`), panel width (`redpenWidth`), remembered
   add-form type/priority (`redpen.addPrefs`), custom note types
-  (`redpen.customTypes`), custom pin colour (`redpen.pinColor`).
+  (`redpen.customTypes`), custom pin colour (`redpen.pinColor`), your display
+  name (`redpen.author`).
 - Hub connection (if you use it): `redpen.hub.url`, `redpen.hub.token`,
   `redpen.hub.project`.
 - Notes are scoped per page by `location.pathname`; the All-notes board shows every page.
+- **If the store fills up**, the widget says so and offers an Export instead of
+  dropping the note silently. Export, delete some notes, then carry on.
+
+## On a phone
+
+The panel becomes a bottom sheet below 600px, pin mode takes touch (tap to pin,
+drag to scroll), and inputs are 16px so iOS does not zoom the page on focus.
+
+## Working with someone else
+
+Set **Your name** in Settings and this browser stamps it on the notes and
+replies you add, so two people reviewing the same page can tell their notes
+apart. It is blank until you set it. There are no accounts - notes still live in
+each browser, so share them with Export / Import or push them to a Red Pen Hub.
 
 ## Status
+
+Full history in [CHANGELOG.md](CHANGELOG.md).
+
+v0.1.0 - phone support and a second reviewer. Narrow viewports get a bottom
+sheet with 36px+ tap targets, `env(safe-area-inset-bottom)` and a 16px input
+floor (so iOS stops zooming); pin mode takes touch, where a tap pins and a drag
+scrolls. Orphaned pins are surfaced instead of silently hidden, a full
+localStorage reports the failure instead of discarding the note, a
+`MutationObserver` keeps pins honest through SPA re-renders, and notes carry an
+`author` you set once in Settings. Notes now send `statusAt`, `resolvedAt` and
+`typeLabel` to the Hub.
+
+v0.0.14 - fixed note cards squishing (and their action rows becoming
+unclickable) once the list overflowed the panel's max-height.
+
+v0.0.13 - fixed the Hub status colours never rendering (a plain inline style
+lost to the sheet's `!important` `.rp-help` colour), and added `form` to the
+armor element list.
 
 v0.0.12 - theme-proofing round two: the whole stylesheet now lives one ID
 tier up (component rules scoped under the widget's mount-root IDs), so even
