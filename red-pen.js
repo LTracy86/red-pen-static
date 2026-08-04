@@ -55,6 +55,16 @@
   // !important} (0,1,1 - out-ranks a bare class) lose to both layers.
   // Do not add display here - it is toggled from JS/classes.
   // Known residual gap: rem/vh units track the host page's root sizing.
+  //
+  // ROOTS is every element we mount at the top level, and S is the ID-tier
+  // prefix every component rule must carry. They are hoisted into variables
+  // because the list appeared verbatim 88 times: adding a mount root, or a new
+  // piece of UI that forgets the prefix, is how a hostile host page gets a foot
+  // in the door. Keeping it in one place makes the armor a one-line change.
+  // ANY new UI added below must be written as `S + '.rp-thing{...}'`, with
+  // !important on every declaration - a bare `.rp-thing{}` is not armored.
+  var ROOTS = '#rp-fab,#rp-panel,#rp-pinlayer,#rp-pinmode,#rp-hint,#rp-toast,#rp-allmodal';
+  var S = ':is(' + ROOTS + ') ';
   var css = '\
   ' + ROOTS + '{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;font-size:13px!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;text-shadow:none!important}\
   ' + S + ':is(a,button,select,textarea,input,label,form,p,span,div,ul,ol,li,img,svg,h1,h2,h3,h4,h5,h6){transform:none!important;font-family:inherit!important;font-size:inherit!important;font-weight:inherit!important;font-style:inherit!important;line-height:inherit!important;color:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;text-shadow:none!important;text-decoration:none!important;box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;float:none!important;list-style:none!important}\
