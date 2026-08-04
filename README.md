@@ -72,6 +72,12 @@ each browser, so share them with Export / Import or push them to a Red Pen Hub.
 
 Full history in [CHANGELOG.md](CHANGELOG.md).
 
+v0.1.1 - an imported `in_progress` note is no longer silently downgraded to
+open. `statusKey()` coerced any unrecognised status to `open`, so a note
+carrying the family spec's spelling - which the Express surface now writes -
+lost its middle state on import. Every spelling is accepted on the way in, and
+anything leaving this surface uses the spec's `in_progress`.
+
 v0.1.0 - phone support and a second reviewer. Narrow viewports get a bottom
 sheet with 36px+ tap targets, `env(safe-area-inset-bottom)` and a 16px input
 floor (so iOS stops zooming); pin mode takes touch, where a tap pins and a drag
