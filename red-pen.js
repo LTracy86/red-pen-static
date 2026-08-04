@@ -23,7 +23,18 @@
   var AMBER = '#E8A100';                    // In Progress accent (mirrors the WP plugin)
   var HEX_RE = /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/;
   // Normalise any stored status to a known key ('open' | 'progress' | 'resolved').
-  function statusKey(n) { var s = n && n.status; return (s === 'resolved' || s === 'progress') ? s : 'open'; }
+  // The family spec's middle status is `in_progress`; this surface has always stored
+  // `progress` internally, and the Hub emits `progress` on write-back. Accept every
+  // spelling on the way IN - anything unrecognised used to silently become 'open',
+  // which quietly downgraded an in-progress note imported from Express or the spec.
+  function statusKey(n) {
+    var s = n && n.status;
+    if (s === 'resolved') return 'resolved';
+    if (s === 'progress' || s === 'in_progress' || s === 'in-progress') return 'progress';
+    return 'open';
+  }
+  // The spec spelling, for anything leaving this surface. Internal state stays 'progress'.
+  function statusWire(n) { var k = statusKey(n); return k === 'progress' ? 'in_progress' : k; }
   // User-defined note types: { ct_slug: { label, color } }, parsed from "Label|#hex" lines.
   function customTypes() {
     var raw = ''; try { raw = localStorage.getItem(CUSTOM_TYPES_KEY) || ''; } catch (e) {}
